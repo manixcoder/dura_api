@@ -265,7 +265,7 @@ class OtpController extends Controller
 
     public function otpmessages()
     {
-        $apiKey = urlencode('Njg2NTU0NTE2ZDRlNGM0ZjM3Mzg0MzY0MzY0ZjRjNmY=');
+        $apiKey = urlencode(env('TXL_TOKEN'));
 
         // Message details
         $numbers = array(917905848385);

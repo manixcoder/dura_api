@@ -1,0 +1,160 @@
+ public class MainPageViewModel : BaseViewModel
+
+    {
+        private string behaviorsTxt;
+
+        public string BehaviorsTxt
+        {
+            get { return behaviorsTxt; }
+            set { behaviorsTxt = value; }
+        }
+
+
+        private string _username, _email, _password, _confirmPassword, _phoneNumber;
+        public string Username
+        {
+            get => _username;
+            set
+            {
+                _username = value;
+                OnPropertyChanged(nameof(Username));
+            }
+        }
+        public string Email
+        {
+            get => _email;
+            set
+            {
+                _email = value;
+                OnPropertyChanged(nameof(Email));
+            }
+        }
+        public string Password
+        {
+            get => _password;
+            set
+            {
+                _password = value;
+                OnPropertyChanged(nameof(Password));
+            }
+        }
+        public string ConfirmPassword
+        {
+            get => _confirmPassword;
+            set
+            {
+                _confirmPassword = value;
+                OnPropertyChanged(nameof(ConfirmPassword));
+            }
+        }
+        public string PhoneNumber
+        {
+            get => _phoneNumber;
+            set
+            {
+                _phoneNumber = value;
+                OnPropertyChanged(nameof(PhoneNumber));
+            }
+        }
+
+        //private bool _usernameNotValid, _emailNotValid, _passwordNotValid, _phoneNumberNotValid;
+        //public bool UsernameNotValid
+        //{
+        //    get => _usernameNotValid;
+        //    set
+        //    {
+        //        _usernameNotValid = value;
+        //        OnPropertyChanged(nameof(UsernameNotValid));
+        //    }
+        //}
+        //public bool EmailNotValid
+        //{
+        //    get => _emailNotValid;
+        //    set
+        //    {
+        //        _emailNotValid = value;
+        //        OnPropertyChanged(nameof(EmailNotValid));
+        //    }
+        //}  
+        //public bool PasswordNotValid
+        //{
+        //    get => _passwordNotValid;
+        //    set
+        //    {
+        //        _passwordNotValid = value;
+        //        OnPropertyChanged(nameof(EmailNotValid));
+        //    }
+        //}  
+        //public bool PhoneNumberNotValid
+        //{
+        //    get => _phoneNumberNotValid;
+        //    set
+        //    {
+        //        _phoneNumberNotValid = value;
+        //        OnPropertyChanged(nameof(PhoneNumberNotValid));
+        //    }
+        //}
+
+        public ICommand Validationcmd => new Command(async (obj) =>
+        {
+            if (string.IsNullOrEmpty(Username))
+            {
+                App.Current.MainPage.DisplayAlert("Error", "Please enter user name", "OK");
+            }
+            else if (string.IsNullOrEmpty(Email))
+            {
+                App.Current.MainPage.DisplayAlert("Error", "Please enter email id", "OK");
+            }
+            else if (string.IsNullOrEmpty(Password))
+            {
+                App.Current.MainPage.DisplayAlert("Error", "Please enter password", "OK");
+            }
+
+            else if (string.IsNullOrEmpty(PhoneNumber))
+            {
+                App.Current.MainPage.DisplayAlert("Error", "Please enter phone number", "OK");
+            }
+
+            else if (UsernameNotValid)
+            {
+                App.Current.MainPage.DisplayAlert("Error", "Please Enter the valid user name", "OK");
+            }
+            else if (EmailNotValid)
+            {
+                App.Current.MainPage.DisplayAlert("Error", "Please Enter the valid email id", "OK");
+            }
+            else if (PasswordNotValid)
+            {
+                App.Current.MainPage.DisplayAlert("Error", "Please Enter the valid password", "OK");
+            }
+            else if (ConfirmPasswordNotValid)
+            {
+                App.Current.MainPage.DisplayAlert("Error", "Password and confirm password do not match.", "Ok");
+            }
+            //else if (ConfirmPasswordNotValid)
+            //{
+            //    App.Current.MainPage.DisplayAlert("Error", "Password and confirm password do not match.", "Ok");
+            //} 
+            else if (Password != ConfirmPassword)
+            {
+                App.Current.MainPage.DisplayAlert("Error", "Password and confirm password do not match.", "Ok");
+            }
+            else if (PhoneNumberNotValid)
+            {
+                App.Current.MainPage.DisplayAlert("Error", "Please Enter the valid phone number", "OK");
+            }
+
+            else
+            {
+                App.Current.MainPage.DisplayAlert("Success", "All fields Valid", "OK");
+            }
+        });
+        public class TestModel
+        {
+            public string Description { get; set; }
+        }
+        public  MainPageViewModel()
+        {
+            BehaviorsTxt = "Behavior With Focus";
+        }
+    }

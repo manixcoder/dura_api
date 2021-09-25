@@ -744,7 +744,16 @@ class CartController extends Controller
         ];
         $getpickup  = DB::table('durapickupshedule')->where('user_id', $request->user_id)->orderby('id', 'desc')->first();
         if($getpickup->is_stop =='1'){
-            $DB::table('durapickupshedule')->where('user_id', $request->user_id)->orderby('id', 'desc')->first();
+            $stoplocationData = DB::table('pickup_stoplocation')->where('pickup_id', $getpickup->id)->get();
+            $locData=array();
+            foreach($stoplocationData as $stoplocation){
+                $stoplat = $stoplocation->stoplat;
+                $stoplon = $stoplocation->stoplon;
+                echo "<pre>";
+                print_r($stoplocation->stoplat);
+                die;
+            }
+
         }else{
 
         }

@@ -164,7 +164,7 @@ class DriverController extends Controller
                 'email'         =>$usertype['email'],
                 'phone'         =>$usertype['phone'],
                 'profile_image' =>URL::to('/')."/public/Media/".$usertype['profile_image'],
-                "data"          =>$this->respondWithToken($token)
+                 "data"          =>$this->respondWithToken($token)
             ]);
             return response()->json($data, 200);
         }

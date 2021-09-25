@@ -241,7 +241,7 @@ class OrdersController extends Controller
         $rules = [
             'user_id' => 'required|int',
             'page_id' => 'required|int',
-            'totatcount'=>'required|int',
+            'totalcount'=>'required|int',
         ];
         $validator = Validator::make($request->all(), $rules);
         if ($validator->fails()) {
@@ -272,7 +272,7 @@ class OrdersController extends Controller
                         ->where('order_no', '!=', 1)
                         ->where('vehicle_id', '!=', null)
                         ->offset($request->page_id)
-                        ->limit($request->totatcount)
+                        ->limit($request->totalcount)
                         ->orderby('id', 'desc')
                         ->get();
                     //print_r($IsPresent);die();
@@ -284,7 +284,7 @@ class OrdersController extends Controller
                             ->where('vehicle_id', '!=', null)
                             ->orderby('id', 'desc')
                             ->offset($request->page_id)
-                            ->limit($request->totatcount)
+                            ->limit($request->totalcount)
                             ->get();
                     }
                     foreach ($IsPresent as $ispresent) {
@@ -320,6 +320,9 @@ class OrdersController extends Controller
                         $destination = $getpickup->destinationlat . "," . $getpickup->destinationlon;
                         $api = file_get_contents("https://maps.googleapis.com/maps/api/distancematrix/json?units=imperial&origins=" . $origin . "&destinations=" . $destination . "&key=".env('Google_Key')."");
                         $data = json_decode($api);
+                        // echo "<pre>";
+                        // print_r($data);
+                        // die;
                         $times = @$data->rows[0]->elements[0]->duration->text;
 
                         $km = $this->distance($getpickup->pickuplat, $getpickup->pickuplon, $getpickup->destinationlat, $getpickup->destinationlon, "K");

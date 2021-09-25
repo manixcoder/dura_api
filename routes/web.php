@@ -40,10 +40,7 @@ $router->group(['prefix' => 'api'], function () use ($router) {
     $router->post('user_driverrequest', 'CartController@user_driverrequest');
     $router->post('testotp', 'CartController@testotp');
 
-});
-
-//$router->group(['prefix' => 'api', 'middleware' => 'auth'], function () use ($router) {
-$router->group(['prefix' => 'api'], function () use ($router) {    
+   
      
     //Driver
     $router->post('drivernoti', 'DriverController@drivernoti');
@@ -191,4 +188,10 @@ $router->group(['prefix' => 'api'], function () use ($router) {
     $router->post('remove_user_wishlist', 'WishlistController@remove_user_wishlist');
     $router->get('get_user_wishlist_by_customer_id/{id}', 'WishlistController@get_user_wishlist_by_customer_id');
      
+});
+
+
+//$router->group(['prefix' => 'api', 'middleware' => 'auth'], function () use ($router) {
+$router->group(['prefix' => 'api'], function () use ($router) { 
+    
 });

@@ -179,6 +179,9 @@ class CartController extends Controller
     }
     public function shedule_pickup(Request $request)
     {
+        // echo "<pre>";
+        // print_r($request->all());
+        // die;
         $rules = [
             'user_id' => 'required|int',
             'pickup_mobile' => 'required',
@@ -191,47 +194,57 @@ class CartController extends Controller
             return response()->json(['status' => 422, 'Status' => 'Failed', 'message' => $validator->messages()], 200);
         } else {
             try {
+                if ($request->stopData != null) {
+                    $is_stop='1';
+                }else{
+                    $is_stop='0';
+                }
                 $pickupshedule = array(
-                    "pickup_address1" => $request->pickup_address1,
-                    "pickup_address2" => $request->pickup_address2,
-                    "pickup_mobile" => $request->pickup_mobile,
-                    "pickup_name" => $request->pickup_name,
-                    "destination_address1" => $request->destination_address1,
-                    "destination_address2" => $request->destination_address2,
-                    "destination_mobile" => $request->destination_mobile,
-                    "destination_name" => $request->destination_name,
-                    "type" => $request->type,
-                    "acctype" => $request->acctype,
-                    "pdate" => $request->pdate,
-                    "created_at" => $request->created_at,
-                    "user_id" => $request->user_id,
-                    "pickuplat" => $request->pickuplat,
-                    "pickuplon" => $request->pickuplon,
-                    "destinationlat" => $request->destinationlat,
-                    "destinationlon" => $request->destinationlon,
-                    "status" => '1'
+                    "pickup_address1"           => $request->pickup_address1,
+                    "pickup_address2"           => $request->pickup_address2,
+                    "pickup_mobile"             => $request->pickup_mobile,
+                    "pickup_name"               => $request->pickup_name,
+                    "destination_address1"      => $request->destination_address1,
+                    "destination_address2"      => $request->destination_address2,
+                    "destination_mobile"        => $request->destination_mobile,
+                    "destination_name"          => $request->destination_name,
+                    "type"                      => $request->type,
+                    "acctype"                   => $request->acctype,
+                    "pdate"                     => $request->pdate,
+                    "created_at"                => $request->created_at,
+                    "user_id"                   => $request->user_id,
+                    "pickuplat"                 => $request->pickuplat,
+                    "pickuplon"                 => $request->pickuplon,
+                    "destinationlat"            => $request->destinationlat,
+                    "destinationlon"            => $request->destinationlon,
+                    "is_stop"                   => $is_stop,
+                    "status"                    => '1'
                 );
                 $item = DB::table('durapickupshedule')->insertGetId($pickupshedule);
                 //print_r($item);die;
                 if ($request->stopData != null) {
+                    $stopData=json_decode($request->stopData);
                     //$stopData = $request->stopData;
                     $services = array();
-                    foreach ($request->stopData as $data) {
+                    foreach ($stopData as $data) {
+                        // echo "<pre>";
+                        // print_r($data->stop_address1);
+                        // die;
                         $services = array(
                             'pickup_id'     => $item,
-                            'stop_address1' => $data['stop_address1'],
-                            'stop_address2' => $data['stop_address2'],
-                            'stop_name'     => $data['stop_name'],
-                            'stop_mobile'   => $data['stop_mobile'],
-                            'stoplat'       => $data['stoplat'],
-                            'stoplon'       => $data['stoplon']
+                            'stop_address1' => $data->stop_address1,
+                            'stop_address2' => $data->stop_address2,
+                            'stop_name'     => $data->stop_name,
+                            'stop_mobile'   => $data->stop_mobile,
+                            'stoplat'       => $data->stoplat,
+                            'stoplon'       => $data->stoplon
                         );
                         $iteminsert = DB::table('pickup_stoplocation')->insertGetId($services);
                     }
                 }
                 return response()->json(['status' => 200, 'message' => 'Success', 'data' => $item], 200);
             } catch (\Exception $e) {
-                // dd($e);
+                dd($e);
                 return response()->json(['status' => 422, 'message' => $e->getMessage()], 500);
             }
         }

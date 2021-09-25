@@ -55,7 +55,7 @@ class DriverManagementController extends Controller
                         // dd(env('TWILIO_FROM'));
                         $sid = env('SID');
                         $token = env('TWILIO_TOKEN');
-                        $twilio = new Client($sid, $token);
+                        $twilio = new Client($sid,  $token);
                         $message = $twilio->messages
                             ->create(
                                 $request->input('country_code') . $request->input('mobile'), // to 
@@ -81,7 +81,7 @@ class DriverManagementController extends Controller
             }
         }
     }
-      
+       
       public function verifyOTP(Request $request){
          
         $rules = [

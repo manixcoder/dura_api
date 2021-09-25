@@ -195,9 +195,9 @@ class CartController extends Controller
         } else {
             try {
                 if ($request->stopData != null) {
-                    $is_stop='1';
-                }else{
-                    $is_stop='0';
+                    $is_stop = '1';
+                } else {
+                    $is_stop = '0';
                 }
                 $pickupshedule = array(
                     "pickup_address1"           => $request->pickup_address1,
@@ -223,7 +223,7 @@ class CartController extends Controller
                 $item = DB::table('durapickupshedule')->insertGetId($pickupshedule);
                 //print_r($item);die;
                 if ($request->stopData != null) {
-                    $stopData=json_decode($request->stopData);
+                    $stopData = json_decode($request->stopData);
                     //$stopData = $request->stopData;
                     $services = array();
                     foreach ($stopData as $data) {
@@ -437,7 +437,7 @@ class CartController extends Controller
         $droplon='77.321823';
             $origin = $pickuplat.",".$pickuplon; 
             $destination = $droplat.",".$droplon;
-            $api = file_get_contents("https://maps.googleapis.com/maps/api/distancematrix/json?units=imperial&origins=".$origin."&destinations=".$destination."&key=AIzaSyAggbvh490Y3Oa7tVGSKDB6gep-j62ZJls");
+            $api = file_get_contents("https://maps.googleapis.com/maps/api/distancematrix/json?units=imperial&origins=".$origin."&destinations=".$destination."&key=".env('Google_Key')."");
             $data = json_decode($api);
             print_r($data);die;*/
         $rules = [
@@ -463,13 +463,13 @@ class CartController extends Controller
                         foreach ($driverdata as $drivervalue) {
                             /*$origin = $data->pickuplat.",".$data->pickuplon; 
                         $destination = $drivervalue->latitude.",".$drivervalue->longitude;
-                        $api = file_get_contents("https://maps.googleapis.com/maps/api/distancematrix/json?units=imperial&origins=".$origin."&destinations=".$destination."&key=AIzaSyAggbvh490Y3Oa7tVGSKDB6gep-j62ZJls");
+                        $api = file_get_contents("https://maps.googleapis.com/maps/api/distancematrix/json?units=imperial&origins=".$origin."&destinations=".$destination."&key=".env('Google_Key')."");
                         $data = json_decode($api);
                         print_r($data);die;*/
 
                             $origin = $data->pickuplat . "," . $data->pickuplon;
                             $destination = $drivervalue->c_lat . "," . $drivervalue->c_log;
-                            $api = file_get_contents("https://maps.googleapis.com/maps/api/distancematrix/json?units=imperial&origins=" . $origin . "&destinations=" . $destination . "&key=AIzaSyAggbvh490Y3Oa7tVGSKDB6gep-j62ZJls");
+                            $api = file_get_contents("https://maps.googleapis.com/maps/api/distancematrix/json?units=imperial&origins=" . $origin . "&destinations=" . $destination . "&key=".env('Google_Key')."");
                             $data = json_decode($api);
                             $times = @$data->rows[0]->elements[0]->duration->text;
                             $km = $this->distance($data->pickuplat, $data->pickuplon, $drivervalue->c_lat, $drivervalue->c_log, "K");
@@ -656,7 +656,7 @@ class CartController extends Controller
                 foreach ($driverdata as $drivervalue) {
                     /*$origin = $data->pickuplat.",".$data->pickuplon; 
                     $destination = $drivervalue->latitude.",".$drivervalue->longitude;
-                    $api = file_get_contents("https://maps.googleapis.com/maps/api/distancematrix/json?units=imperial&origins=".$origin."&destinations=".$destination."&key=AIzaSyAggbvh490Y3Oa7tVGSKDB6gep-j62ZJls");
+                    $api = file_get_contents("https://maps.googleapis.com/maps/api/distancematrix/json?units=imperial&origins=".$origin."&destinations=".$destination."&key=".env('Google_Key')."");
                     $dataapis = json_decode($api);
                     print_r($dataapis);die;
                     $times = $data->rows[0]->elements[0]->duration->text;*/
@@ -685,7 +685,7 @@ class CartController extends Controller
                     $getdriver    =  DB::table('driveuser')->where('id', $IsPresent->driver_id)->first();
                     $destination = $IsPresent->pickuplat . "," . $IsPresent->pickuplon;
                     $origin = $getdriver->latitude . "," . $getdriver->longitude;
-                    $api = file_get_contents("https://maps.googleapis.com/maps/api/distancematrix/json?units=imperial&origins=" . $origin . "&destinations=" . $destination . "&key=AIzaSyAggbvh490Y3Oa7tVGSKDB6gep-j62ZJls");
+                    $api = file_get_contents("https://maps.googleapis.com/maps/api/distancematrix/json?units=imperial&origins=" . $origin . "&destinations=" . $destination . "&key=".env('Google_Key')."");
                     $dataapis = json_decode($api);
                     //print_r($dataapis);die;
                     $times = @$dataapis->rows[0]->elements[0]->duration->text;
@@ -710,7 +710,7 @@ class CartController extends Controller
                     $getdriver    =  DB::table('driveuser')->where('id', 5)->first();
                     $destination = $IsPresent->pickuplat . "," . $IsPresent->pickuplon;
                     $origin = $getdriver->latitude . "," . $getdriver->longitude;
-                    $api = file_get_contents("https://maps.googleapis.com/maps/api/distancematrix/json?units=imperial&origins=" . $origin . "&destinations=" . $destination . "&key=AIzaSyAggbvh490Y3Oa7tVGSKDB6gep-j62ZJls");
+                    $api = file_get_contents("https://maps.googleapis.com/maps/api/distancematrix/json?units=imperial&origins=" . $origin . "&destinations=" . $destination . "&key=".env('Google_Key')."");
                     $dataapis = json_decode($api);
                     //print_r($dataapis);die;
                     $times = @$dataapis->rows[0]->elements[0]->duration->text;
@@ -739,14 +739,20 @@ class CartController extends Controller
 
     public function get_pickup_details(Request $request)
     {
-
         $rules = [
             'user_id' => 'required|int'
         ];
+        $getpickup  = DB::table('durapickupshedule')->where('user_id', $request->user_id)->orderby('id', 'desc')->first();
+        if($getpickup->is_stop =='1'){
+            $DB::table('durapickupshedule')->where('user_id', $request->user_id)->orderby('id', 'desc')->first();
+        }else{
+
+        }
+                    echo "<pre>";
+                    print_r($getpickup);
+                    die;
 
         $validator = Validator::make($request->all(), $rules);
-
-
         if ($validator->fails()) {
             return response()->json(['status' => 422, 'Status' => 'Failed', 'message' => $validator->messages()], 200);
         } else {
@@ -761,6 +767,9 @@ class CartController extends Controller
                         ->get();
 
                     $getpickup  = DB::table('durapickupshedule')->where('id', $IsPresent->id)->first();
+                    echo "<pre>";
+                    print_r($getpickup);
+                    die;
 
                     if ($IsPresent->coupon != null) {
                         $rowget = DB::table('promocode')->where('name', $IsPresent->coupon)->count();
@@ -768,11 +777,11 @@ class CartController extends Controller
                             $row = DB::table('promocode')->where('name', $IsPresent->coupon)->first();
 
                             $coupon    =  array(
-                                'id' => @$row->id,
-                                'couponname' => @$row->name,
-                                'discount'   => @$row->discount,
-                                'description' => @$row->application,
-                                'currency'   => '₱'
+                                'id'            => @$row->id,
+                                'couponname'    => @$row->name,
+                                'discount'      => @$row->discount,
+                                'description'   => @$row->application,
+                                'currency'      => '₱'
                             );
                         }
                     }
@@ -784,8 +793,17 @@ class CartController extends Controller
 
                         $origin = $getpickup->pickuplat . "," . $getpickup->pickuplon;
                         $destination = $getpickup->destinationlat . "," . $getpickup->destinationlon;
-                        $api = file_get_contents("https://maps.googleapis.com/maps/api/distancematrix/json?units=imperial&origins=" . $origin . "&destinations=" . $destination . "&key=AIzaSyAggbvh490Y3Oa7tVGSKDB6gep-j62ZJls");
+                        echo "origin " . $origin . "<br>";
+                        echo "destination " . $destination;
+                        die;
+                        echo "<pre>";
+                        print_r($destination);
+                        die;
+                        $api = file_get_contents("https://maps.googleapis.com/maps/api/distancematrix/json?units=imperial&origins=" . $origin . "&destinations=" . $destination . "&key=".env('Google_Key')."");
                         $data = json_decode($api);
+                        echo "<pre>";
+                        print_r($data);
+                        die;
                         $times = @$data->rows[0]->elements[0]->duration->text;
                         /*if($times==null)
                         {
@@ -925,7 +943,7 @@ class CartController extends Controller
 
                     $origin = $getpickup->pickuplat . "," . $getpickup->pickuplon;
                     $destination = $getpickup->destinationlat . "," . $getpickup->destinationlon;
-                    $api = file_get_contents("https://maps.googleapis.com/maps/api/distancematrix/json?units=imperial&origins=" . $origin . "&destinations=" . $destination . "&key=AIzaSyAggbvh490Y3Oa7tVGSKDB6gep-j62ZJls");
+                    $api = file_get_contents("https://maps.googleapis.com/maps/api/distancematrix/json?units=imperial&origins=" . $origin . "&destinations=" . $destination . "&key=".env('Google_Key')."");
                     $data = json_decode($api);
                     $times = @$data->rows[0]->elements[0]->duration->text;
 
@@ -1357,19 +1375,19 @@ class CartController extends Controller
 
     public function testotp(Request $request)
     {
-       // dd(env('SID'));
-       // dd(env('TWILIO_TOKEN'));
-       // dd(env('TWILIO_FROM'));
+        // dd(env('SID'));
+        // dd(env('TWILIO_TOKEN'));
+        // dd(env('TWILIO_FROM'));
 
         $POSTFIELDS = array(
-            "To" => '+917905848385', 
-            'MessagingServiceSid' => env('TWILIO_FROM'), 
+            "To" => '+917905848385',
+            'MessagingServiceSid' => env('TWILIO_FROM'),
             'Body' => 'test messages'
         );
         $POSTFIELDS = json_encode($POSTFIELDS);
 
         //Official purchase address Sandbox purchase address
-        $url   = "https://api.twilio.com/2010-04-01/Accounts/".env('SID')."/Messages.json";
+        $url   = "https://api.twilio.com/2010-04-01/Accounts/" . env('SID') . "/Messages.json";
         //$url = "https://sandbox.itunes.apple.com/verifyReceipt";
 
         //Simple curl
@@ -1418,7 +1436,7 @@ class CartController extends Controller
         $origin = $pickuplat . "," . $pickuplon;
         $destination = $droplat . "," . $droplon;
 
-        $api = file_get_contents("https://maps.googleapis.com/maps/api/distancematrix/json?units=imperial&origins=" . $origin . "&destinations=" . $destination . "&key=AIzaSyAggbvh490Y3Oa7tVGSKDB6gep-j62ZJls");
+        $api = file_get_contents("https://maps.googleapis.com/maps/api/distancematrix/json?units=imperial&origins=" . $origin . "&destinations=" . $destination . "&key=".env('Google_Key')."");
         $data = json_decode($api);
         // print_r($data->rows[0]->elements[0]->duration->text);
         // die;

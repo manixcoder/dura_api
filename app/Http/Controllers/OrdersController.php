@@ -318,7 +318,7 @@ class OrdersController extends Controller
 
                         $origin = $getpickup->pickuplat . "," . $getpickup->pickuplon;
                         $destination = $getpickup->destinationlat . "," . $getpickup->destinationlon;
-                        $api = file_get_contents("https://maps.googleapis.com/maps/api/distancematrix/json?units=imperial&origins=" . $origin . "&destinations=" . $destination . "&key=AIzaSyAggbvh490Y3Oa7tVGSKDB6gep-j62ZJls");
+                        $api = file_get_contents("https://maps.googleapis.com/maps/api/distancematrix/json?units=imperial&origins=" . $origin . "&destinations=" . $destination . "&key=".env('Google_Key')."");
                         $data = json_decode($api);
                         $times = @$data->rows[0]->elements[0]->duration->text;
 

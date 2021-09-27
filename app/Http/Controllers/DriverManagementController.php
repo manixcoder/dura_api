@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Validator; 
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Twilio\Rest\Client;
 use App\Http\Controllers\PushNotificationCommonController;
@@ -17,8 +17,8 @@ use QRCode;
 
 class DriverManagementController extends Controller
 {
-    
-      public function sendOTP(Request $request)
+
+    public function sendOTP(Request $request)
     {
         $rules = [
             'country_code' => 'required',
@@ -34,7 +34,7 @@ class DriverManagementController extends Controller
             try {
                 $driverData = DB::table('driveuser')->where('mobile', $request->input('mobile'))->get();
                 if (count($driverData) > 0) {
-                    return response()->json(['status' => 409, 'message' => 'This mobile number allready registered','data'=>[]], 409);
+                    return response()->json(['status' => 409, 'message' => 'This mobile number allready registered', 'data' => []], 409);
                 } else {
                     // $otp = $this->generateNumericCode(4);
                     // $msg = "Your code for otp varification " . $otp;
@@ -48,8 +48,8 @@ class DriverManagementController extends Controller
                             'email' => $request->input('mobile')
                         ]);
                         require base_path('public/twilio-php-main/src/Twilio/autoload.php');
-                       
-                        
+
+
                         // dd(env('SID'));
                         // dd(env('TWILIO_TOKEN'));
                         // dd(env('TWILIO_FROM'));
@@ -81,73 +81,61 @@ class DriverManagementController extends Controller
             }
         }
     }
-       
-      public function verifyOTP(Request $request){
-         
+
+    public function verifyOTP(Request $request)
+    {
+
         $rules = [
             'country_code' => 'required',
-            'mobile' => 'required',  
-            'otp' => 'required'                  
+            'mobile' => 'required',
+            'otp' => 'required'
         ];
-        $validator = Validator::make($request ->all(), $rules);
-        if ($validator->fails()){
-            return response()->json(['StatusCode' => 422,'status' => 'Failed','message'=>$validator->messages() ], 200);
-        } 
-        else 
-        {
-            try 
-            {
+        $validator = Validator::make($request->all(), $rules);
+        if ($validator->fails()) {
+            return response()->json(['StatusCode' => 422, 'status' => 'Failed', 'message' => $validator->messages()], 200);
+        } else {
+            try {
                 if (is_numeric($request->input('mobile'))) {
                     $row = DB::table('users_otp')
-                    ->where('country_code',$request->input('country_code'))
-                    ->where('otp',$request->input('otp'))
-                    ->where('phone',$request->input('mobile'))
-                    ->first();
-                }else{
+                        ->where('country_code', $request->input('country_code'))
+                        ->where('otp', $request->input('otp'))
+                        ->where('phone', $request->input('mobile'))
+                        ->first();
+                } else {
                     $row = DB::table('users_otp')
-                    ->where('country_code',$request->input('country_code'))
-                    ->where('otp',$request->input('otp'))
-                    ->first();
+                        ->where('country_code', $request->input('country_code'))
+                        ->where('otp', $request->input('otp'))
+                        ->first();
                 }
-                if($row!=null)
-                {
+                if ($row != null) {
                     $data = collect([
-                        "status" =>200,
-                        "message" => "otp varified", 
-                        "data"=>[]
-                        ]);
-                    $is_update=DB::table('users_otp')
-                    ->where('country_code',$request->input('country_code'))
-                    ->where('otp',$request->input('otp'))
-                    ->where('phone',$request->input('mobile'))
-                    ->delete();
-                    return response()->json($data, 200); 
-                }else{
-                   $data = collect([
-                   'status' => 409,
-                    "message" => "Wrong code",   
-                    "data"=>[]
+                        "status" => 200,
+                        "message" => "otp varified",
+                        "data" => []
                     ]);
-                return response()->json($data, 409); 
+                    $is_update = DB::table('users_otp')
+                        ->where('country_code', $request->input('country_code'))
+                        ->where('otp', $request->input('otp'))
+                        ->where('phone', $request->input('mobile'))
+                        ->delete();
+                    return response()->json($data, 200);
+                } else {
+                    $data = collect([
+                        'status' => 409,
+                        "message" => "Wrong code",
+                        "data" => []
+                    ]);
+                    return response()->json($data, 409);
                 }
-            }
-            catch (\Exception $e) 
-            {               
+            } catch (\Exception $e) {
                 //return response()->json(['status' => 409, 'message' => 'Something wrong country code or mobile number not matched'], 409);
                 return response()->json(['status' => 422, 'message' => $e->getMessage()], 409);
             }
         }
     }
-   public function driverRegistration(Request $request)
+    public function driverRegistration(Request $request)
     {
-        // echo "<pre>";
-        // print_r($request->all());
-        // die;
         $rules = [
-           // 'firstname' => 'required',
-            //'middlename' => 'required',
-           // 'lastname' => 'required',
-           // 'mobile' => 'required|integer',
             'email' => 'required',
             'password' => 'required',
         ];
@@ -210,21 +198,21 @@ class DriverManagementController extends Controller
                     $tasks_controller       = new PushNotificationCommonController;
                     $referralcode           = $tasks_controller->generateReferalCodeDriver();
                     /* QR Code Generate start*/
-                    require base_path('phpqrcode/qrlib.php');
+                    require base_path('public/phpqrcode/qrlib.php');
                     //include('phpqrcode/qrlib.php');
 
                     $tempDir = base_path('public/Media/QRCode/');
-                    
 
-                    $codeContents = $codeContents = $request->input('country_code').$request->input('mobile');
-                    $fileName = $request->input('mobile').md5($codeContents).'.png';
-                    $pngAbsoluteFilePath = $tempDir.$fileName;
-                    $urlRelativeFilePath = $tempDir.$fileName;
+
+                    $codeContents = $codeContents = $request->input('country_code') . $request->input('mobile');
+                    $fileName = $request->input('mobile') . md5($codeContents) . '.png';
+                    $pngAbsoluteFilePath = $tempDir . $fileName;
+                    $urlRelativeFilePath = $tempDir . $fileName;
                     if (!file_exists($pngAbsoluteFilePath)) {
                         QRcode::png($codeContents, $pngAbsoluteFilePath);
                     }
                     /* QR Code Generate end*/
-                    
+
                     $datass = array(
                         'firstname'             => $request->input('firstname'),
                         'middlename'            => $request->input('middlename'),
@@ -233,7 +221,7 @@ class DriverManagementController extends Controller
                         'dob'                   => $request->input('dob'),
                         'password'              => Hash::make($request->input('password')),
                         'email'                 => $request->input('email'),
-                        'manager_account_no'    => $request->input('manager_account_no'), 
+                        'manager_account_no'    => $request->input('manager_account_no'),
                         'g_cash_accont_name'    => $request->input('g_cash_accont_name'),
                         'g_cash_no'             => $request->input('g_cash_no'),
                         'lastupdatedatetime'    => date('Y-m-d H:i:s'),
@@ -246,46 +234,60 @@ class DriverManagementController extends Controller
                         'isvarified'            => '0',
                         'is_online'             => 1,
                         'referralcode'          => $referralcode,
-                        'refered_by'            =>'',
+                        'refered_by'            => '',
                         'isbusinessaccout'      => '0',
                         'latitude'              => $request->input('latitude'),
                         'longitude'             => $request->input('longitude'),
                         'created_at'            => date('Y-m-d H:i:s'),
                         'updated_at'            => date('Y-m-d H:i:s'),
                     );
-                    $addData = DB::table('driveuser')->insertGetId($datass);
+                    $driver_id = DB::table('driveuser')->insertGetId($datass);
                     $docdata = array(
-                        'driver_id'=>$addData,
-                        'cr_no'=>$request->input('cr_no'),
-                        'crno_image'=>$crno_image,
-                        'licence_no'=>$request->input('licence_no'), 
-                        'frontlicensephoto'=>$frontlicensephoto,
-                        'backlicensephoto'=>$backlicensephoto,
-                        'police_clearance_no'=>$request->input('police_clearance_no'),
-                        'police_clearance_image'=>$police_clearance_image,
-                        'vehicle_id'=>$request->input('vehicle_id'),
-                        'vehiclephoto'=>$vehiclephoto,
-                        'document_type'=>'',
-                        'docsExpire'=>'',
-                        'docs_status'=>'',
-                        'document_file'=>'',
-                        'isactive'=>'1',
-                        'createddate'=>date('Y-m-d H:i:s'),
-                        'created_at'=>date('Y-m-d H:i:s'),
-                        'updated_at'=>date('Y-m-d H:i:s'),
+                        'driver_id' => $driver_id,
+                        'cr_no' => $request->input('cr_no'),
+                        'crno_image' => $crno_image,
+                        'licence_no' => $request->input('licence_no'),
+                        'frontlicensephoto' => $frontlicensephoto,
+                        'backlicensephoto' => $backlicensephoto,
+                        'police_clearance_no' => $request->input('police_clearance_no'),
+                        'police_clearance_image' => $police_clearance_image,
+                        'vehicle_id' => $request->input('vehicle_id'),
+                        'vehiclephoto' => $vehiclephoto,
+                        'document_type' => '',
+                        'docsExpire' => '',
+                        'docs_status' => '',
+                        'document_file' => '',
+                        'isactive' => '1',
+                        'createddate' => date('Y-m-d H:i:s'),
+                        'created_at' => date('Y-m-d H:i:s'),
+                        'updated_at' => date('Y-m-d H:i:s'),
                     );
                     $walletData = array(
-                        'driver_id' => $addData,
+                        'driver_id' => $driver_id,
                         'wallet_amount' => '0',
                         'created_at' => date('Y-m-d H:i:s'),
                         'updated_at' => date('Y-m-d H:i:s'),
                     );
                     $driverWallet = DB::table('driver_wallet')->insert($walletData);
                     $addDatadoc = DB::table('drivepersonaldoc')->insertGetId($docdata);
-                    $driverData = DB::table('driveuser')->where('id', $addData)->first();
-                    $driverDoc = DB::table('drivepersonaldoc')->where('driver_id', $addData)->first();
-                    $driverWallet = DB::table('driver_wallet')->where('driver_id', $addData)->first();
-                    $user = Driver::where('id', '=', $addData)->first();
+                    // $driverData = DB::table('driveuser')->where('id', $driver_id)->first();
+
+                    // $driverDoc = DB::table('drivepersonaldoc')->where('driver_id', $driver_id)->first();
+                    // $driverWallet = DB::table('driver_wallet')->where('driver_id', $driver_id)->first();
+
+
+                    $driverData = DB::table('driveuser')->where('id', $driver_id)->first();
+                    $driverData->profilephoto_url = URL::to('/') . "/public/Media/" . $driverData->profilephoto_url;
+                    $driverData->qr_code = URL::to('/') . "/public/Media/QRCode/" . $driverData->qr_code;
+                    $driverDoc = DB::table('drivepersonaldoc')->where('driver_id',  $driver_id)->first();
+                    $driverDoc->frontlicensephoto = URL::to('/') . "/public/Media/" . $driverDoc->frontlicensephoto;
+                    $driverDoc->backlicensephoto = URL::to('/') . "/public/Media/" . $driverDoc->backlicensephoto;
+                    $driverDoc->police_clearance_no = URL::to('/') . "/public/Media/" . $driverDoc->police_clearance_no;
+                    $driverDoc->vehiclephoto = URL::to('/') . "/public/Media/" . $driverDoc->vehiclephoto;
+                    $driverDoc->police_clearance_image = URL::to('/') . "/public/Media/" . $driverDoc->police_clearance_image;
+                    $driverWallet = DB::table('driver_wallet')->where('driver_id', $driver_id)->first();
+
+                    $user = Driver::where('id', '=', $driver_id)->first();
                     $token = Auth::fromUser($user);
                     $tokenData = $this->respondWithToken($token);
                     $finalData = array(
@@ -312,8 +314,6 @@ class DriverManagementController extends Controller
             'firstname' => 'required',
             'middlename' => 'required',
             'lastname' => 'required',
-            //'mobile' => 'required|integer',
-            //'email' => 'required',
         ];
         $validator = Validator::make($request->all(), $rules);
         if ($validator->fails()) {
@@ -368,16 +368,12 @@ class DriverManagementController extends Controller
                     $tasks_controller       = new PushNotificationCommonController;
                     $referralcode           = $tasks_controller->generateReferalCodeDriver();
                     /* QR Code Generate start*/
-                    require base_path('phpqrcode/qrlib.php');
-                    //include('phpqrcode/qrlib.php');
-
+                    require base_path('public/phpqrcode/qrlib.php');
                     $tempDir = base_path('public/Media/QRCode/');
-                    
-
-                    $codeContents = $codeContents = $request->input('country_code').$request->input('mobile');
-                    $fileName = $request->input('mobile').md5($codeContents).'.png';
-                    $pngAbsoluteFilePath = $tempDir.$fileName;
-                    $urlRelativeFilePath = $tempDir.$fileName;
+                    $codeContents = $codeContents = $request->input('country_code') . $request->input('mobile');
+                    $fileName = $request->input('mobile') . md5($codeContents) . '.png';
+                    $pngAbsoluteFilePath = $tempDir . $fileName;
+                    $urlRelativeFilePath = $tempDir . $fileName;
                     if (!file_exists($pngAbsoluteFilePath)) {
                         QRcode::png($codeContents, $pngAbsoluteFilePath);
                     }
@@ -390,7 +386,7 @@ class DriverManagementController extends Controller
                         'dob'                   => $request->input('dob'),
                         'password'              => Hash::make($request->input('password')),
                         'email'                 => $request->input('email'),
-                        'manager_account_no'    => $request->input('manager_account_no'), 
+                        'manager_account_no'    => $request->input('manager_account_no'),
                         'g_cash_accont_name'    => $request->input('g_cash_accont_name'),
                         'g_cash_no'             => $request->input('g_cash_no'),
                         'lastupdatedatetime'    => date('Y-m-d H:i:s'),
@@ -403,40 +399,47 @@ class DriverManagementController extends Controller
                         'isvarified'            => '0',
                         'is_online'             => 1,
                         'referralcode'          => $referralcode,
-                        'refered_by'            =>'',
+                        'refered_by'            => '',
                         'isbusinessaccout'      => '0',
                         'latitude'              => $request->input('latitude'),
                         'longitude'             => $request->input('longitude'),
                         'created_at'            => date('Y-m-d H:i:s'),
                         'updated_at'            => date('Y-m-d H:i:s'),
                     );
-                    $addData = DB::table('driveuser')->where('id',$request->driver_id)->update($datass);
+                    $addData = DB::table('driveuser')->where('id', $request->driver_id)->update($datass);
                     $docdata = array(
-                        'cr_no'=>$request->input('cr_no'),
-                        'crno_image'=>$crno_image,
-                        'licence_no'=>$request->input('licence_no'), 
-                        'frontlicensephoto'=>$frontlicensephoto,
-                        'backlicensephoto'=>$backlicensephoto,
-                        'police_clearance_no'=>$request->input('police_clearance_no'),
-                        'police_clearance_image'=>$police_clearance_image,
-                        'vehicle_id'=>$request->input('vehicle_id'),
-                        'vehiclephoto'=>$vehiclephoto,
-                        'document_type'=>'',
-                        'docsExpire'=>'',
-                        'docs_status'=>'',
-                        'document_file'=>'',
-                        'isactive'=>'1',
-                        'createddate'=>date('Y-m-d H:i:s'),
-                        'created_at'=>date('Y-m-d H:i:s'),
-                        'updated_at'=>date('Y-m-d H:i:s'),
+                        'cr_no' => $request->input('cr_no'),
+                        'crno_image' => $crno_image,
+                        'licence_no' => $request->input('licence_no'),
+                        'frontlicensephoto' => $frontlicensephoto,
+                        'backlicensephoto' => $backlicensephoto,
+                        'police_clearance_no' => $request->input('police_clearance_no'),
+                        'police_clearance_image' => $police_clearance_image,
+                        'vehicle_id' => $request->input('vehicle_id'),
+                        'vehiclephoto' => $vehiclephoto,
+                        'document_type' => '',
+                        'docsExpire' => '',
+                        'docs_status' => '',
+                        'document_file' => '',
+                        'isactive' => '1',
+                        'createddate' => date('Y-m-d H:i:s'),
+                        'created_at' => date('Y-m-d H:i:s'),
+                        'updated_at' => date('Y-m-d H:i:s'),
                     );
 
-                    $addDatadoc = DB::table('drivepersonaldoc')->where('driver_id',$request->driver_id)->update($docdata);
-                    
+                    $addDatadoc = DB::table('drivepersonaldoc')->where('driver_id', $request->driver_id)->update($docdata);
 
-                    $driverData = DB::table('driveuser')->where('id', $request->driver_id)->first();
-                    $driverDoc = DB::table('drivepersonaldoc')->where('driver_id', $request->driver_id)->first();
-                    $driverWallet = DB::table('driver_wallet')->where('driver_id', $request->driver_id)->first();
+
+                    $driverData = DB::table('driveuser')->where('id', $driverData->id)->first();
+                    $driverData->profilephoto_url = URL::to('/') . "/public/Media/" . $driverData->profilephoto_url;
+                    $driverData->qr_code = URL::to('/') . "/public/Media/QRCode/" . $driverData->qr_code;
+                    $driverDoc = DB::table('drivepersonaldoc')->where('driver_id',  $driverData->id)->first();
+                    $driverDoc->frontlicensephoto = URL::to('/') . "/public/Media/" . $driverDoc->frontlicensephoto;
+                    $driverDoc->backlicensephoto = URL::to('/') . "/public/Media/" . $driverDoc->backlicensephoto;
+                    $driverDoc->police_clearance_no = URL::to('/') . "/public/Media/" . $driverDoc->police_clearance_no;
+                    $driverDoc->vehiclephoto = URL::to('/') . "/public/Media/" . $driverDoc->vehiclephoto;
+                    $driverDoc->police_clearance_image = URL::to('/') . "/public/Media/" . $driverDoc->police_clearance_image;
+                    $driverWallet = DB::table('driver_wallet')->where('driver_id', $driverData->id)->first();
 
                     $finalData = array(
                         'driverData'         => $driverData,
@@ -454,7 +457,8 @@ class DriverManagementController extends Controller
             }
         }
     }
-    public function getDriverDetails(Request $request){
+    public function getDriverDetails(Request $request)
+    {
         $rules = [
             'driver_id' => 'required',
         ];
@@ -464,22 +468,32 @@ class DriverManagementController extends Controller
         } else {
             try {
                 $driverData = DB::table('driveuser')->where('id', $request->driver_id)->first();
+                $driverData->profilephoto_url = URL::to('/') . "/public/Media/" . $driverData->profilephoto_url;
+                $driverData->qr_code = URL::to('/') . "/public/Media/QRCode/" . $driverData->qr_code;
                 $driverDoc = DB::table('drivepersonaldoc')->where('driver_id', $request->driver_id)->first();
+                $driverDoc->frontlicensephoto = URL::to('/') . "/public/Media/" . $driverDoc->frontlicensephoto;
+                $driverDoc->backlicensephoto = URL::to('/') . "/public/Media/" . $driverDoc->backlicensephoto;
+                $driverDoc->police_clearance_no = URL::to('/') . "/public/Media/" . $driverDoc->police_clearance_no;
+                $driverDoc->vehiclephoto = URL::to('/') . "/public/Media/" . $driverDoc->vehiclephoto;
+                $driverDoc->police_clearance_image = URL::to('/') . "/public/Media/" . $driverDoc->police_clearance_image;
                 $driverWallet = DB::table('driver_wallet')->where('driver_id', $request->driver_id)->first();
+                // echo "<pre>";
+                // print_r($driverData); 
+                // die;
                 $finalData = array(
                     'driverData'         => $driverData,
                     'driverDoc'          => $driverDoc,
                     'driverWallet'       => $driverWallet
-                    );
-                    $data = collect(["status" => 200, "message" => "Data found sucessfully", "data" => $finalData]);
-                    return response()->json($data, 200);
+                );
+                $data = collect(["status" => 200, "message" => "Data found sucessfully", "data" => $finalData]);
+                return response()->json($data, 200);
             } catch (\Exception $e) {
                 return response()->json(['status' => 422, 'message' => $e->getMessage()], 409);;
             }
         }
-        
     }
-    public function driverDutyStatus(Request $request){
+    public function driverDutyStatus(Request $request)
+    {
         $rules = [
             'driver_id' => 'required',
         ];
@@ -489,35 +503,41 @@ class DriverManagementController extends Controller
         } else {
             try {
                 $driverData = DB::table('driveuser')->where('id', $request->driver_id)->first();
-                if($driverData){
-                    $driverData = DB::table('driveuser')->where('id', $request->driver_id)->update(['is_online'=>$request->is_online]);
+                if ($driverData) {
+                    $driverData = DB::table('driveuser')->where('id', $request->driver_id)->update(['is_online' => $request->is_online]);
                     $driverData = DB::table('driveuser')->where('id', $request->driver_id)->first();
+                    $driverData->profilephoto_url = URL::to('/') . "/public/Media/" . $driverData->profilephoto_url;
+                    $driverData->qr_code = URL::to('/') . "/public/Media/QRCode/" . $driverData->qr_code;
                     $driverDoc = DB::table('drivepersonaldoc')->where('driver_id', $request->driver_id)->first();
+                    $driverDoc->frontlicensephoto = URL::to('/') . "/public/Media/" . $driverDoc->frontlicensephoto;
+                    $driverDoc->backlicensephoto = URL::to('/') . "/public/Media/" . $driverDoc->backlicensephoto;
+                    $driverDoc->police_clearance_no = URL::to('/') . "/public/Media/" . $driverDoc->police_clearance_no;
+                    $driverDoc->vehiclephoto = URL::to('/') . "/public/Media/" . $driverDoc->vehiclephoto;
+                    $driverDoc->police_clearance_image = URL::to('/') . "/public/Media/" . $driverDoc->police_clearance_image;
                     $driverWallet = DB::table('driver_wallet')->where('driver_id', $request->driver_id)->first();
-                    if($driverData->is_online =='1'){
-                        $status='Online';
-                    }else{
-                        $status='Offline';
+                    if ($driverData->is_online == '1') {
+                        $status = 'Online';
+                    } else {
+                        $status = 'Offline';
                     }
                     $finalData = array(
                         'driverData'         => $driverData,
                         'driverDoc'          => $driverDoc,
                         'driverWallet'       => $driverWallet
                     );
-                    $data = collect(["status" => 200, "message" => "You are ". $status ." sucessfully", "data" => $finalData]);
+                    $data = collect(["status" => 200, "message" => "You are " . $status . " sucessfully", "data" => $finalData]);
                     return response()->json($data, 200);
-                }else{
-                  return response()->json(['status' => 422, 'message' => "Driver not found","data" => null], 409);  
+                } else {
+                    return response()->json(['status' => 422, 'message' => "Driver not found", "data" => null], 409);
                 }
-                
             } catch (\Exception $e) {
                 return response()->json(['status' => 422, 'message' => $e->getMessage()], 409);
             }
         }
-        
     }
-    
-    public function driverAutoAcceptStatus(Request $request){
+
+    public function driverAutoAcceptStatus(Request $request)
+    {
         $rules = [
             'driver_id' => 'required',
         ];
@@ -527,33 +547,40 @@ class DriverManagementController extends Controller
         } else {
             try {
                 $driverData = DB::table('driveuser')->where('id', $request->driver_id)->first();
-                if($driverData){
-                    $driverData = DB::table('driveuser')->where('id', $request->driver_id)->update(['is_autoaccept'=>$request->is_autoaccept]);
+                if ($driverData) {
+                    $driverData = DB::table('driveuser')->where('id', $request->driver_id)->update(['is_autoaccept' => $request->is_autoaccept]);
                     $driverData = DB::table('driveuser')->where('id', $request->driver_id)->first();
+                    $driverData->profilephoto_url = URL::to('/') . "/public/Media/" . $driverData->profilephoto_url;
+                    $driverData->qr_code = URL::to('/') . "/public/Media/QRCode/" . $driverData->qr_code;
                     $driverDoc = DB::table('drivepersonaldoc')->where('driver_id', $request->driver_id)->first();
+                    $driverDoc->frontlicensephoto = URL::to('/') . "/public/Media/" . $driverDoc->frontlicensephoto;
+                    $driverDoc->backlicensephoto = URL::to('/') . "/public/Media/" . $driverDoc->backlicensephoto;
+                    $driverDoc->police_clearance_no = URL::to('/') . "/public/Media/" . $driverDoc->police_clearance_no;
+                    $driverDoc->vehiclephoto = URL::to('/') . "/public/Media/" . $driverDoc->vehiclephoto;
+                    $driverDoc->police_clearance_image = URL::to('/') . "/public/Media/" . $driverDoc->police_clearance_image;
                     $driverWallet = DB::table('driver_wallet')->where('driver_id', $request->driver_id)->first();
-                    if($driverData->is_autoaccept =='1'){
-                        $status='AutoAccept On';
-                    }else{
-                        $status='AutoAccept Off';
+                    if ($driverData->is_autoaccept == '1') {
+                        $status = 'AutoAccept On';
+                    } else {
+                        $status = 'AutoAccept Off';
                     }
                     $finalData = array(
                         'driverData'         => $driverData,
                         'driverDoc'          => $driverDoc,
                         'driverWallet'       => $driverWallet
                     );
-                    $data = collect(["status" => 200, "message" => "You are ". $status ." sucessfully", "data" => $finalData]);
+                    $data = collect(["status" => 200, "message" => "You are " . $status . " sucessfully", "data" => $finalData]);
                     return response()->json($data, 200);
-                }else{
-                  return response()->json(['status' => 422, 'message' => "Driver not found","data" => null], 409);  
+                } else {
+                    return response()->json(['status' => 422, 'message' => "Driver not found", "data" => null], 409);
                 }
-                
             } catch (\Exception $e) {
                 return response()->json(['status' => 422, 'message' => $e->getMessage()], 409);
             }
         }
     }
-    public function driverPickupDecline(Request $request){
+    public function driverPickupDecline(Request $request)
+    {
         $rules = [
             'driver_id' => 'required',
             'pickup_id' => 'required',
@@ -564,46 +591,44 @@ class DriverManagementController extends Controller
         } else {
             try {
                 $pickupsheduleData = DB::table('durapickupshedule')
-                ->where('id', $request->pickup_id)
-                ->where('driver_id', $request->driver_id)
-                ->first();
-                if($pickupsheduleData){
+                    ->where('id', $request->pickup_id)
+                    ->where('driver_id', $request->driver_id)
+                    ->first();
+                if ($pickupsheduleData) {
                     $pickupdeclineData = DB::table('driverdecline')
-                                ->where('pickup_id', $request->pickup_id)
-                                ->where('driver_id', $request->driver_id)
-                                ->first();
-                            if($pickupdeclineData){
-                               $data = collect(["status" => 200, "message" => "You have allready decline"]);
-                    return response()->json($data, 200);  
-                            }else{
-                               $pickupsheduleData = DB::table('driverdecline')
-                               ->insert([
-                                   'pickup_id'=>$request->pickup_id,
-                                   'driver_id'=>$request->driver_id
-                             ]);
-                             $pickupshedule = DB::table('durapickupshedule')
-                             ->where('id', $request->pickup_id)
-                             ->where('driver_id', $request->driver_id)
-                             ->update([
-                                 'driver_id'=>0,
-                                 'status'=>1
-                                 ]);
-                             $data = collect(["status" => 200, "message" => "You decline sucessfully", "data" => $pickupsheduleData]);
-                             return response()->json($data, 200); 
-                            }
-                    
-                }else{
-                   $data = collect(["status" => 200, "message" => "You can'nt decline"]);
-                    return response()->json($data, 200); 
+                        ->where('pickup_id', $request->pickup_id)
+                        ->where('driver_id', $request->driver_id)
+                        ->first();
+                    if ($pickupdeclineData) {
+                        $data = collect(["status" => 200, "message" => "You have allready decline"]);
+                        return response()->json($data, 200);
+                    } else {
+                        $pickupsheduleData = DB::table('driverdecline')
+                            ->insert([
+                                'pickup_id' => $request->pickup_id,
+                                'driver_id' => $request->driver_id
+                            ]);
+                        $pickupshedule = DB::table('durapickupshedule')
+                            ->where('id', $request->pickup_id)
+                            ->where('driver_id', $request->driver_id)
+                            ->update([
+                                'driver_id' => 0,
+                                'status' => 1
+                            ]);
+                        $data = collect(["status" => 200, "message" => "You decline sucessfully", "data" => $pickupsheduleData]);
+                        return response()->json($data, 200);
+                    }
+                } else {
+                    $data = collect(["status" => 200, "message" => "You can'nt decline"]);
+                    return response()->json($data, 200);
                 }
-                
             } catch (\Exception $e) {
                 return response()->json(['status' => 422, 'message' => $e->getMessage()], 409);
             }
         }
-        
     }
-    public function driverAcceptPickup(Request $request){
+    public function driverAcceptPickup(Request $request)
+    {
         $rules = [
             'driver_id' => 'required',
             'pickup_id' => 'required',
@@ -614,29 +639,29 @@ class DriverManagementController extends Controller
         } else {
             try {
                 $pickupsheduleData = DB::table('durapickupshedule')
-                ->where('id', $request->pickup_id)
-                ->where('driver_id', $request->driver_id)
-                ->first();
-                if($pickupsheduleData){
+                    ->where('id', $request->pickup_id)
+                    ->where('driver_id', $request->driver_id)
+                    ->first();
+                if ($pickupsheduleData) {
                     $pickupshedule = DB::table('durapickupshedule')
-                             ->where('id', $request->pickup_id)
-                             ->where('driver_id', $request->driver_id)
-                             ->update([
-                                 'status'=>2
-                                 ]);
-                             $data = collect(["status" => 200, "message" => "You Accept sucessfully", "data" => $pickupsheduleData]);
-                             return response()->json($data, 200);
-                }else{
-                   $data = collect(["status" => 200, "message" => "You can'nt Accept"]);
-                   return response()->json($data, 200); 
+                        ->where('id', $request->pickup_id)
+                        ->where('driver_id', $request->driver_id)
+                        ->update([
+                            'status' => 2
+                        ]);
+                    $data = collect(["status" => 200, "message" => "You Accept sucessfully", "data" => $pickupsheduleData]);
+                    return response()->json($data, 200);
+                } else {
+                    $data = collect(["status" => 200, "message" => "You can'nt Accept"]);
+                    return response()->json($data, 200);
                 }
-                
             } catch (\Exception $e) {
                 return response()->json(['status' => 422, 'message' => $e->getMessage()], 409);
             }
         }
     }
-    public function getDriverNotification(Request $request){
+    public function getDriverNotification(Request $request)
+    {
         $rules = [
             'driver_id' => 'required',
         ];
@@ -646,23 +671,24 @@ class DriverManagementController extends Controller
         } else {
             try {
                 $driverData = DB::table('driveuser')->where('id', $request->driver_id)->first();
-                if($driverData){
-                   $notificationData = DB::table('notification')->where('user_id', $request->driver_id)->first();
-                   $data = collect(["status" => 200, "message" => "Data found sucessfully", "data" => $notificationData]);
+                if ($driverData) {
+                    $notificationData = DB::table('notification')->where('user_id', $request->driver_id)->first();
+                    $data = collect(["status" => 200, "message" => "Data found sucessfully", "data" => $notificationData]);
                     return response()->json($data, 200);
-                }else{
-                    return response()->json(['status' => 422, 'message' => "Driver not found","data" => null], 409); 
+                } else {
+                    return response()->json(['status' => 422, 'message' => "Driver not found", "data" => null], 409);
                 }
             } catch (\Exception $e) {
                 return response()->json(['status' => 422, 'message' => $e->getMessage()], 409);
             }
         }
     }
-    public function driverCurrentLocation(Request $request){
-            $rules = [
+    public function driverCurrentLocation(Request $request)
+    {
+        $rules = [
             'driver_id' => 'required',
-            'latitude'=>'required',
-            'longitude'=>'required',
+            'latitude' => 'required',
+            'longitude' => 'required',
         ];
         $validator = Validator::make($request->all(), $rules);
         if ($validator->fails()) {
@@ -670,34 +696,39 @@ class DriverManagementController extends Controller
         } else {
             try {
                 $driverData = DB::table('driveuser')->where('id', $request->driver_id)->first();
-                if($driverData){
+                if ($driverData) {
                     $driverData = DB::table('driveuser')->where('id', $request->driver_id)->update([
-                        'latitude'=>$request->latitude,
-                        'longitude'=>$request->longitude,
-                        ]);
-                        $driverData = DB::table('driveuser')->where('id', $request->driver_id)->first();
-                        $driverDoc = DB::table('drivepersonaldoc')->where('driver_id', $request->driver_id)->first();
-                        $driverWallet = DB::table('driver_wallet')->where('driver_id', $request->driver_id)->first();
-                        $finalData = array(
+                        'latitude' => $request->latitude,
+                        'longitude' => $request->longitude,
+                    ]);
+                    $driverData = DB::table('driveuser')->where('id', $request->driver_id)->first();
+                    $driverData->profilephoto_url = URL::to('/') . "/public/Media/" . $driverData->profilephoto_url;
+                    $driverData->qr_code = URL::to('/') . "/public/Media/QRCode/" . $driverData->qr_code;
+                    $driverDoc = DB::table('drivepersonaldoc')->where('driver_id', $request->driver_id)->first();
+                    $driverDoc->frontlicensephoto = URL::to('/') . "/public/Media/" . $driverDoc->frontlicensephoto;
+                    $driverDoc->backlicensephoto = URL::to('/') . "/public/Media/" . $driverDoc->backlicensephoto;
+                    $driverDoc->police_clearance_no = URL::to('/') . "/public/Media/" . $driverDoc->police_clearance_no;
+                    $driverDoc->vehiclephoto = URL::to('/') . "/public/Media/" . $driverDoc->vehiclephoto;
+                    $driverDoc->police_clearance_image = URL::to('/') . "/public/Media/" . $driverDoc->police_clearance_image;
+                    $driverWallet = DB::table('driver_wallet')->where('driver_id', $request->driver_id)->first();
+                    $finalData = array(
                         'driverData'         => $driverData,
                         'driverDoc'          => $driverDoc,
                         'driverWallet'       => $driverWallet
                     );
-                        $data = collect(["status" => 200, "message" => "Updated sucessfully", "data" => $finalData]);
+                    $data = collect(["status" => 200, "message" => "Updated sucessfully", "data" => $finalData]);
                     return response()->json($data, 200);
-                }else{
-                     return response()->json(['status' => 422, 'message' => "Driver not found","data" => null], 409);
+                } else {
+                    return response()->json(['status' => 422, 'message' => "Driver not found", "data" => null], 409);
                 }
-                
             } catch (\Exception $e) {
                 return response()->json(['status' => 422, 'message' => $e->getMessage()], 409);
             }
         }
-        
     }
     public function driverServiceArea(Request $request)
     {
-       
+
         $rules = [
             'country_code' => 'required',
         ];
@@ -755,22 +786,26 @@ class DriverManagementController extends Controller
                     'lastupdatedatetime' => date('Y-m-d H:i:s'),
                 ]);
                 $driverData = DB::table('driveuser')->where('id', $user->id)->first();
-                $driverDoc = DB::table('drivepersonaldoc')
-                    ->where('driver_id', $user->id)
-                    ->first();
-                $driverWallet = DB::table('driver_wallet') 
-                    ->where('driver_id', $user->id)
-                    ->first();
+                $driverData = DB::table('driveuser')->where('id', $driverData->id)->first();
+                $driverData->profilephoto_url = URL::to('/') . "/public/Media/" . $driverData->profilephoto_url;
+                $driverData->qr_code = URL::to('/') . "/public/Media/QRCode/" . $driverData->qr_code;
+                $driverDoc = DB::table('drivepersonaldoc')->where('driver_id',  $driverData->id)->first();
+                $driverDoc->frontlicensephoto = URL::to('/') . "/public/Media/" . $driverDoc->frontlicensephoto;
+                $driverDoc->backlicensephoto = URL::to('/') . "/public/Media/" . $driverDoc->backlicensephoto;
+                $driverDoc->police_clearance_no = URL::to('/') . "/public/Media/" . $driverDoc->police_clearance_no;
+                $driverDoc->vehiclephoto = URL::to('/') . "/public/Media/" . $driverDoc->vehiclephoto;
+                $driverDoc->police_clearance_image = URL::to('/') . "/public/Media/" . $driverDoc->police_clearance_image;
+                $driverWallet = DB::table('driver_wallet')->where('driver_id', $driverData->id)->first();
                 $token = Auth::fromUser($user);
                 $tokenData = $this->respondWithToken($token);
-                $combineData = array( 
+                $combineData = array(
                     'driverData'        => $driverData,
                     'driverDoc'         => $driverDoc,
                     'driverWallet'      => $driverWallet,
-                    'driverRating'      =>'4',
-                    'todaysTotalTrip'   =>'0',
-                    'dutyStatus'        =>$driverData->is_online,
-                    'autoAcceptOrder'   =>false,
+                    'driverRating'      => '4',
+                    'todaysTotalTrip'   => '0',
+                    'dutyStatus'        => $driverData->is_online,
+                    'autoAcceptOrder'   => false,
                     'token'              => $tokenData,
                 );
                 $data = collect(["status" => 200, "message" => "Success", "data" => $combineData]);
@@ -795,7 +830,7 @@ class DriverManagementController extends Controller
             try {
                 $driverData = DB::table('driveuser')
                     ->where('mobile', $request->input('mobile'))
-                    ->get();
+                    ->first();
                 if (count($driverData) > 0) {
                     $datass = array(
                         'password' => Hash::make($request->input('new_password')),
@@ -803,13 +838,16 @@ class DriverManagementController extends Controller
                     );
                     $updateData = DB::table('driveuser')->where('mobile', $request->input('mobile'))->update($datass);
 
-                    $driverData = DB::table('driveuser')->where('mobile', $request->input('mobile'))->first();
-                    $driverDoc = DB::table('drivepersonaldoc')
-                        ->where('driver_id', $driverData->id)
-                        ->first();
-                    $driverWallet = DB::table('driver_wallet')
-                        ->where('driver_id', $driverData->id)
-                        ->first();
+                    $driverData = DB::table('driveuser')->where('id', $driverData->id)->first();
+                    $driverData->profilephoto_url = URL::to('/') . "/public/Media/" . $driverData->profilephoto_url;
+                    $driverData->qr_code = URL::to('/') . "/public/Media/QRCode/" . $driverData->qr_code;
+                    $driverDoc = DB::table('drivepersonaldoc')->where('driver_id',  $driverData->id)->first();
+                    $driverDoc->frontlicensephoto = URL::to('/') . "/public/Media/" . $driverDoc->frontlicensephoto;
+                    $driverDoc->backlicensephoto = URL::to('/') . "/public/Media/" . $driverDoc->backlicensephoto;
+                    $driverDoc->police_clearance_no = URL::to('/') . "/public/Media/" . $driverDoc->police_clearance_no;
+                    $driverDoc->vehiclephoto = URL::to('/') . "/public/Media/" . $driverDoc->vehiclephoto;
+                    $driverDoc->police_clearance_image = URL::to('/') . "/public/Media/" . $driverDoc->police_clearance_image;
+                    $driverWallet = DB::table('driver_wallet')->where('driver_id', $driverData->id)->first();
                     $combineData = array(
                         'driverData'         => $driverData,
                         'driverDoc'          => $driverDoc,
@@ -818,21 +856,21 @@ class DriverManagementController extends Controller
                     $data = collect(["status" => 200, "message" => "Success", "data" => $combineData]);
                     return response()->json($data, 200);
                 } else {
-                    return response()->json(['status' => 422, 'message' => "Mobile not fond","data"=>[]], 409);;
+                    return response()->json(['status' => 422, 'message' => "Mobile not fond", "data" => []], 409);;
                 }
             } catch (\Exception $e) {
                 return response()->json(['status' => 422, 'message' => $e->getMessage()], 409);;
             }
         }
     }
-    public function generateNumericCode($n) {
-          $generator = "1234567890";
-          $result = "";
-          for ($i = 1; $i <= $n; $i++) {
-              $result .= substr($generator, (rand()%(strlen($generator))), 1);
-          }
+    public function generateNumericCode($n)
+    {
+        $generator = "1234567890";
+        $result = "";
+        for ($i = 1; $i <= $n; $i++) {
+            $result .= substr($generator, (rand() % (strlen($generator))), 1);
+        }
         // Return result
         return $result;
-        
-    } 
+    }
 }

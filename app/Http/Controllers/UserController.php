@@ -146,11 +146,11 @@ class UserController extends Controller
         ];
         $validator = Validator::make($request->all(), $rules);
         if ($validator->fails()) {
-            return response()->json(['StatusCode' => 422,'Status' => 'Failed','message'=>$validator->messages() ], 200);
+            return response()->json(['StatusCode' => 422,'Status' => 'Failed','message'=>$validator->messages() ], 200);      
         } 
         else{
             try {
-                $tasks_controller = new PushNotificationCommonController;
+                $tasks_controller = new PushNotificationCommonController;    
                 $usersReferralData = DB::table('users_referralcode')
                 ->where('refereal_code', $request->referral_code)
                 ->where('is_used', '0')

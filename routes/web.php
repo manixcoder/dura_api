@@ -141,7 +141,8 @@ $router->group(['prefix' => 'api'], function () use ($router) {
     $router->get('get_all_notifications', 'NotificationsController@get_all_notifications');
     $router->get('get_notifications_by_customer_id/{id}', 'NotificationsController@get_notifications_by_customer_id');
      
-    $router->post('allorder_ByUser_id', 'OrdersController@order_details_ByUser_id'); 
+    $router->post('allorder_ByUser_id', 'OrdersController@order_details_ByUser_id');
+    $router->post('orderDetailsUserId','OrdersController@orderDetailsUserId');
     $router->post('create_product_order', 'OrdersController@create_product_order');
     $router->post('update_orderpayment_status', 'OrdersController@update_orderpayment_status');
     $router->post('update_product_order', 'OrdersController@update_product_order');

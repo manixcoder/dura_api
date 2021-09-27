@@ -148,6 +148,11 @@ class PushNotificationCommonController extends Controller
 
 	public function multipleStopDistance($lat1, $lon1, $lat2, $lon2, $unit)
 	{
+		echo "lat1 ".$lat1;
+		echo "lon1 ".$lon1;
+		echo "lon2 ".$lon2;
+		echo "lon2 ".$lon2;
+		die;
 		if (($lat1 == $lat2) && ($lon1 == $lon2)) {
 			return 0;
 		} else {

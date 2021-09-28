@@ -40,10 +40,7 @@ $router->group(['prefix' => 'api'], function () use ($router) {
     $router->post('user_driverrequest', 'CartController@user_driverrequest');
     $router->post('testotp', 'CartController@testotp');
 
-});
-
-//$router->group(['prefix' => 'api', 'middleware' => 'auth'], function () use ($router) {
-$router->group(['prefix' => 'api'], function () use ($router) {    
+   
      
     //Driver
     $router->post('drivernoti', 'DriverController@drivernoti');
@@ -101,7 +98,7 @@ $router->group(['prefix' => 'api'], function () use ($router) {
     $router->get('get-all-product-order', 'ProductController@product_order');
     $router->post('product-get-varients', 'ProductController@product_get_accordingto_brandid');
     $router->post('add-product-stock', 'ProductController@add_product_stock');
-    $router->post('get-product-stock-according-to-band', 'ProductController@get_product_stock_according_to_brand');
+    $router->post('get-product-stock-according-to-band', 'ProductController@get_product_stock_according_to_brand'); 
     $router->post('get-product-according-to-band-_id', 'ProductController@get_product_according_to_brand_id');
     
     $router->get('get_products_according_to_id/{id}', 'ProductController@get_products_according_to_id');
@@ -144,7 +141,8 @@ $router->group(['prefix' => 'api'], function () use ($router) {
     $router->get('get_all_notifications', 'NotificationsController@get_all_notifications');
     $router->get('get_notifications_by_customer_id/{id}', 'NotificationsController@get_notifications_by_customer_id');
      
-    $router->post('allorder_ByUser_id', 'OrdersController@order_details_ByUser_id'); 
+    $router->post('allorder_ByUser_id', 'OrdersController@order_details_ByUser_id');
+    $router->post('orderDetailsUserId','OrdersController@orderDetailsUserId');
     $router->post('create_product_order', 'OrdersController@create_product_order');
     $router->post('update_orderpayment_status', 'OrdersController@update_orderpayment_status');
     $router->post('update_product_order', 'OrdersController@update_product_order');
@@ -179,16 +177,19 @@ $router->group(['prefix' => 'api'], function () use ($router) {
     $router->get('get_all_user_cart', 'CartController@get_all_user_cart');
     $router->post('remove_user_cart', 'CartController@remove_user_cart');
     $router->post('paymentmode', 'CartController@paymentmode');
-     
+
     $router->get('getpromocode', 'OtpController@getpromocode');
     $router->post('varifypromocode', 'OtpController@varify_promocode');
-    /*$router->post('send_otp', 'OtpController@send_otp');
-  
-    $router->post('varify_otp', 'OtpController@varify_otp');*/
     $router->post('create_new_password_with_otp', 'OtpController@create_new_password_with_otp');
-     
+
     $router->post('add_to_user_wishlist', 'WishlistController@add_to_user_wishlist');
     $router->post('remove_user_wishlist', 'WishlistController@remove_user_wishlist');
     $router->get('get_user_wishlist_by_customer_id/{id}', 'WishlistController@get_user_wishlist_by_customer_id');
      
+});
+
+
+//$router->group(['prefix' => 'api', 'middleware' => 'auth'], function () use ($router) {
+$router->group(['prefix' => 'api'], function () use ($router) { 
+    
 });

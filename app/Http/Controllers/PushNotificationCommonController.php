@@ -28,7 +28,7 @@ class PushNotificationCommonController extends Controller
 		foreach ($driverdata as $driver) {
 			$lat2 = $driver->latitude;
 			$lon2 = $driver->longitude;
-		
+
 			if (($lat1 == $lat2) && ($lon1 == $lon2)) {
 				return 0;
 			} else {
@@ -37,16 +37,16 @@ class PushNotificationCommonController extends Controller
 				$dist = acos($dist);
 				$dist = rad2deg($dist);
 				$miles = $dist * 60 * 1.1515;
-				$distanc =$miles * 1.60934;
-				
+				$distanc = $miles * 1.60934;
+
 				//dd($miles);
 				$unit = strtoupper($unit);
 				if ($unit == "K") {
-					$distanc =$miles * 1.60934;
-					if($distanc < 25){
+					$distanc = $miles * 1.60934;
+					if ($distanc < 25) {
 						return $driver->id;
 					}
-				//	return ($miles * 1.60934);
+					//	return ($miles * 1.60934);
 				} else if ($unit == "N") {
 					return ($miles * 0.8684);
 				} else {
@@ -55,37 +55,37 @@ class PushNotificationCommonController extends Controller
 			}
 		}
 	}
-	public function generateUsersReferralCode($user_id){
-        
-        $acceptableChars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
-        $randomCode = "";
+	public function generateUsersReferralCode($user_id)
+	{
+
+		$acceptableChars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+		$randomCode = "";
 		for ($i = 0; $i < 8; $i++) {
 			$randomCode .= substr($acceptableChars, rand(0, strlen($acceptableChars) - 1), 1);
 		}
 		$generateCode = $randomCode;
-        $usersReferralData = DB::table('users_referralcode')->where('refereal_code', $generateCode)->first();
-        if ($usersReferralData > 0) {
+		$usersReferralData = DB::table('users_referralcode')->where('refereal_code', $generateCode)->first();
+		if ($usersReferralData > 0) {
 			return $this->generateUsersReferralCode($user_id);
 		} else {
-            $usersReferral = DB::table('users_referralcode')->insert([
-                'user_id'=>$user_id,
-                'refereal_code'=>$generateCode,
-                'is_used'=>'0', 
-                'valid_till'=>date('Y-m-d H:i:s', strtotime('+1 years')),
-                'used_date_at'=>'',
-                'used_by'=>'0',
-                'description'=>'This is the auto generated referral code with 50 % discount on first ride',
-                'percent_discount'=>'50',
-                'created_at'=>date("Y-m-d H:i:s"),
-                'updated_at'=>date("Y-m-d H:i:s")
-            ]);
-            $usersData = DB::table('users')->where('id', $user_id)->update([
-                'referral_code'=>$generateCode
-            ]);
+			$usersReferral = DB::table('users_referralcode')->insert([
+				'user_id' => $user_id,
+				'refereal_code' => $generateCode,
+				'is_used' => '0',
+				'valid_till' => date('Y-m-d H:i:s', strtotime('+1 years')),
+				'used_date_at' => '',
+				'used_by' => '0',
+				'description' => 'This is the auto generated referral code with 50 % discount on first ride',
+				'percent_discount' => '50',
+				'created_at' => date("Y-m-d H:i:s"),
+				'updated_at' => date("Y-m-d H:i:s")
+			]);
+			$usersData = DB::table('users')->where('id', $user_id)->update([
+				'referral_code' => $generateCode
+			]);
 			return $generateCode;
 		}
-
-    }
+	}
 
 	function generateReferalCode()
 	{
@@ -144,5 +144,46 @@ class PushNotificationCommonController extends Controller
 				return $miles;
 			}
 		}
+	}
+
+	public function multipleStopDistance($pickup_id)
+	{
+		$durapickupsheduleData = DB::table('durapickupshedule')
+			->where('id', $pickup_id)
+			->orderby('id', 'desc')
+			->first();
+		if ($durapickupsheduleData->is_stop == '1') {
+			$stopData = DB::table('pickup_stoplocation')
+				->where('pickup_id', $durapickupsheduleData->id)
+				->get();
+			$stoplocation = '';
+			foreach ($stopData as $stop) {
+				$location = "|" . $stop->stoplat . "," . $stop->stoplon;
+				$stoplocation .= $location;
+				//$stop = "|" . $stop->stoplat . "," . $stop->stoplon;
+				// $map = "https://maps.googleapis.com/maps/api/distancematrix/json?units=imperial&origins=" . $durapickupsheduleData->pickuplat . "," . $durapickupsheduleData->pickuplon . $stop . "&destinations=" . $durapickupsheduleData->destinationlat . "," . $durapickupsheduleData->destinationlon . "&key=" . env('GOOGLE_KEY') . "";
+			}
+			$map = "https://maps.googleapis.com/maps/api/distancematrix/json?units=imperial&origins=" . $durapickupsheduleData->pickuplat . "," . $durapickupsheduleData->pickuplon . $stoplocation . "&destinations=" . $durapickupsheduleData->destinationlat . "," . $durapickupsheduleData->destinationlon . "&key=" . env('GOOGLE_KEY') . "";
+		} else {
+			$map = "https://maps.googleapis.com/maps/api/distancematrix/json?units=imperial&origins=" . $durapickupsheduleData->pickuplat . "," . $durapickupsheduleData->pickuplon . "&destinations=" . $durapickupsheduleData->destinationlat . "," . $durapickupsheduleData->destinationlon . "&key=" . env('GOOGLE_KEY') . "";
+		}
+		// echo $map;
+		// die;
+		// $map = "https://maps.googleapis.com/maps/api/distancematrix/json?units=imperial&origins=28.617276,77.180989|27.307315,77.982991|28.976272,78.649494|28.664557,77.426533&destinations=27.6901798,76.8147774&key=" . env('GOOGLE_Key') . "";
+		$api = file_get_contents($map);
+		$data = json_decode($api);
+		$times = @$data->rows[0]->elements[0]->duration->text;
+		$distance = 0;
+		foreach (@$data->rows as $row) {
+			$distancetext = $row->elements[0]->distance->text;
+			$distanceText = explode(" ", $distancetext);
+			$distance = $distance + $distanceText[0];
+		}
+		// echo $distance  . " Mil " . " ";
+
+		// echo $distance * 1.609344 . " Km";die; 
+		$distance = $distance * 1.60934;
+		$distance = number_format($distance, 2);
+		return $distance;
 	}
 }

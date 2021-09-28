@@ -268,6 +268,11 @@ class CartController extends Controller
             try {
                 $km = $this->distance($request->pickuplat, $request->pickuplon, $request->destinationlat, $request->destinationlon, "K");
                 $distance = number_format($km, 0, '', '');
+                /*distance by google api*/
+                 $tasks_controller = new PushNotificationCommonController;
+                 $distance = $tasks_controller->multipleStopDistance($request->pickup_id);
+                // echo $distance;
+                // die;               
                 $data = DB::table('vehicle')->where('service', 1)->get();
                 if ($data) {
                     $finalData = array();
@@ -437,7 +442,7 @@ class CartController extends Controller
         $droplon='77.321823';
             $origin = $pickuplat.",".$pickuplon; 
             $destination = $droplat.",".$droplon;
-            $api = file_get_contents("https://maps.googleapis.com/maps/api/distancematrix/json?units=imperial&origins=".$origin."&destinations=".$destination."&key=".env('GOOGLE_Key')."");
+            $api = file_get_contents("https://maps.googleapis.com/maps/api/distancematrix/json?units=imperial&origins=".$origin."&destinations=".$destination."&key=".env('GOOGLE_KEY')."");
             $data = json_decode($api);
             print_r($data);die;*/
         $rules = [
@@ -463,18 +468,23 @@ class CartController extends Controller
                         foreach ($driverdata as $drivervalue) {
                             /*$origin = $data->pickuplat.",".$data->pickuplon; 
                         $destination = $drivervalue->latitude.",".$drivervalue->longitude;
-                        $api = file_get_contents("https://maps.googleapis.com/maps/api/distancematrix/json?units=imperial&origins=".$origin."&destinations=".$destination."&key=".env('GOOGLE_Key')."");
+                        $api = file_get_contents("https://maps.googleapis.com/maps/api/distancematrix/json?units=imperial&origins=".$origin."&destinations=".$destination."&key=".env('GOOGLE_KEY')."");
                         $data = json_decode($api);
                         print_r($data);die;*/
 
                             $origin = $data->pickuplat . "," . $data->pickuplon;
                             $destination = $drivervalue->c_lat . "," . $drivervalue->c_log;
-                            $api = file_get_contents("https://maps.googleapis.com/maps/api/distancematrix/json?units=imperial&origins=" . $origin . "&destinations=" . $destination . "&key=" . env('GOOGLE_Key') . "");
+                            $api = file_get_contents("https://maps.googleapis.com/maps/api/distancematrix/json?units=imperial&origins=" . $origin . "&destinations=" . $destination . "&key=" . env('GOOGLE_KEY') . "");
                             $data = json_decode($api);
                             $times = @$data->rows[0]->elements[0]->duration->text;
                             $km = $this->distance($data->pickuplat, $data->pickuplon, $drivervalue->c_lat, $drivervalue->c_log, "K");
                             //print_r($km); die('------');
                             $distance = number_format($km, 0, '', '');
+                            /*distance by google api*/
+                            $tasks_controller = new PushNotificationCommonController;
+                            $distance = $tasks_controller->multipleStopDistance($request->pickup_id);
+                            // echo $distance;
+                            // die;  
                             if ($distance <= 10000) {
 
                                 $finalData =  array(
@@ -656,15 +666,23 @@ class CartController extends Controller
                 foreach ($driverdata as $drivervalue) {
                     /*$origin = $data->pickuplat.",".$data->pickuplon; 
                     $destination = $drivervalue->latitude.",".$drivervalue->longitude;
-                    $api = file_get_contents("https://maps.googleapis.com/maps/api/distancematrix/json?units=imperial&origins=".$origin."&destinations=".$destination."&key=".env('GOOGLE_Key')."");
+                    $api = file_get_contents("https://maps.googleapis.com/maps/api/distancematrix/json?units=imperial&origins=".$origin."&destinations=".$destination."&key=".env('GOOGLE_KEY')."");
                     $dataapis = json_decode($api);
                     print_r($dataapis);die;
                     $times = $data->rows[0]->elements[0]->duration->text;*/
                     $km = $this->distance($data->pickuplat, $data->pickuplon, $drivervalue->latitude, $drivervalue->longitude, "K");
                     $distance = number_format($km, 0, '', '');
+                    /*distance by google api*/
+                    $tasks_controller = new PushNotificationCommonController;
+                    $distance = $tasks_controller->multipleStopDistance($request->pickup_id);
+                   
 
                     $km = $this->distance($data->pickuplat, $data->pickuplon, $data->destinationlat, $data->destinationlon, "K");
                     $distance = number_format($km, 0, '', '');
+                    /*distance by google api*/
+                    $tasks_controller = new PushNotificationCommonController;
+                    $distance = $tasks_controller->multipleStopDistance($request->pickup_id);
+                    
                     if ($distance < 500000) {
                         $finalData =  array(
                             'driver_id'     => $drivervalue->id,
@@ -685,7 +703,7 @@ class CartController extends Controller
                     $getdriver    =  DB::table('driveuser')->where('id', $IsPresent->driver_id)->first();
                     $destination = $IsPresent->pickuplat . "," . $IsPresent->pickuplon;
                     $origin = $getdriver->latitude . "," . $getdriver->longitude;
-                    $api = file_get_contents("https://maps.googleapis.com/maps/api/distancematrix/json?units=imperial&origins=" . $origin . "&destinations=" . $destination . "&key=" . env('GOOGLE_Key') . "");
+                    $api = file_get_contents("https://maps.googleapis.com/maps/api/distancematrix/json?units=imperial&origins=" . $origin . "&destinations=" . $destination . "&key=" . env('GOOGLE_KEY') . "");
                     $dataapis = json_decode($api);
                     //print_r($dataapis);die;
                     $times = @$dataapis->rows[0]->elements[0]->duration->text;
@@ -793,6 +811,11 @@ class CartController extends Controller
 
                         $km = $this->distance($getpickup->pickuplat, $getpickup->pickuplon, $getpickup->destinationlat, $getpickup->destinationlon, "K");
                         $distance = number_format($km, 0, '', '');
+                        /*distance by google api*/
+                        $tasks_controller = new PushNotificationCommonController;
+                        $distance = $tasks_controller->multipleStopDistance($getpickup->id);
+                        
+
 
                         $totalprice = $distance * $getvehicle->kmfare + $getvehicle->basefare;
 
@@ -812,8 +835,7 @@ class CartController extends Controller
                         }
                         $totalPrices = $getpickup->finalprice;
                         $stopcount = DB::table('pickup_stoplocation')->where('pickup_id', $IsPresent->id)->count();
-
-/* multiple stop data start*/ 
+                        /* multiple stop data start*/
 
                         $getpickup  = DB::table('durapickupshedule')->where('id', $IsPresent->id)->orderby('id', 'desc')->first();
                         $origin = $getpickup->pickuplat . "," . $getpickup->pickuplon;
@@ -823,6 +845,7 @@ class CartController extends Controller
                         if ($stopcount > 0) {
                             $stopget = DB::table('pickup_stoplocation')->where('pickup_id', $getpickup->id)->get();
                             $stoplocation = array();
+                            $stoplocations = '';
                             foreach ($stopget as $getstop) {
                                 $stoplocation[]     = array(
                                     'stop_address1' => $getstop->stop_address1,
@@ -832,21 +855,16 @@ class CartController extends Controller
                                     'stoplat'       => $getstop->stoplat,
                                     'stoplon'       => $getstop->stoplon
                                 );
+                                $location = "/" . $getstop->stoplat . "," . $getstop->stoplon;
+                                $stoplocations .= $location;
+
                             }
-                            $driverlocationlink = 'https://www.google.com/maps/dir/' . $origin . '/' . $getstop->stoplat . ',' . $getstop->stoplon . '/' . $destination;
-                            $map = "https://maps.googleapis.com/maps/api/distancematrix/json?units=imperial&origins=" . $origin . "|" . $getstop->stoplat . ',' . $getstop->stoplon . "&destinations=" . $destination . "&key=" . env('GOOGLE_Key') . "";
-                            $api = file_get_contents($map);
-                            $data = json_decode($api);
+                            $driverlocationlink = 'https://www.google.com/maps/dir/' . $origin . $stoplocations . '/' . $destination;
                         } else {
                             $driverlocationlink = 'https://www.google.com/maps/dir/' . $origin . '/' . $destination;
-                            $map = "https://maps.googleapis.com/maps/api/distancematrix/json?units=imperial&origins=" . $origin . "&destinations=" . $destination . "&key=" . env('GOOGLE_KEY') . "";
-                            $api = file_get_contents($map);
-                            $data = json_decode($api);
                         }
-
-/* multiple stop data end*/
-
-                        //echo $stopget;die;
+                        /* multiple stop data end*/
+                        // echo $stopget;die;
                         // if ($stopcount > 0) {
                         //     $stopget = DB::table('pickup_stoplocation')->where('pickup_id', $IsPresent->id)->get();
                         //     $stoplocation = array();
@@ -958,20 +976,23 @@ class CartController extends Controller
 
                     $origin = $getpickup->pickuplat . "," . $getpickup->pickuplon;
                     $destination = $getpickup->destinationlat . "," . $getpickup->destinationlon;
-                    $api = file_get_contents("https://maps.googleapis.com/maps/api/distancematrix/json?units=imperial&origins=" . $origin . "&destinations=" . $destination . "&key=" . env('GOOGLE_Key') . "");
+                    $api = file_get_contents("https://maps.googleapis.com/maps/api/distancematrix/json?units=imperial&origins=" . $origin . "&destinations=" . $destination . "&key=" . env('GOOGLE_KEY') . "");
                     $data = json_decode($api);
                     $times = @$data->rows[0]->elements[0]->duration->text;
 
                     $km = $this->distance($getpickup->pickuplat, $getpickup->pickuplon, $getpickup->destinationlat, $getpickup->destinationlon, "K");
                     $distance = number_format($km, 0, '', '');
+
+                    /*distance by google api*/
+                    $tasks_controller = new PushNotificationCommonController;
+                    $distance = $tasks_controller->multipleStopDistance($getpickup->id);
+                    
                     if ($getpickup->tip != '') {
                         $tip = $getpickup->tip;
                     } else {
                         $tip = '0';
                     }
                     $totalPrice = $getpickup->finalprice;
-
-
                     $services = DB::table('durapickup_services as ds')
                         ->join('pricecard as pc', 'ds.service_id', '=', 'pc.id')
                         ->where('ds.pickup_id', $IsPresent->id)
@@ -1007,8 +1028,9 @@ class CartController extends Controller
                     $stopcount = DB::table('pickup_stoplocation')->where('pickup_id', $IsPresent->id)->count();
                     //echo $stopget;die;
                     if ($stopcount > 0) {
-                        $stopget = DB::table('pickup_stoplocation')->where('pickup_id', $IsPresent->id)->get();
+                        $stopget = DB::table('pickup_stoplocation')->where('pickup_id', $getpickup->id)->get();
                         $stoplocation = array();
+                        $stoplocations = '';
                         foreach ($stopget as $getstop) {
                             $stoplocation[]     = array(
                                 'stop_address1' => $getstop->stop_address1,
@@ -1018,7 +1040,13 @@ class CartController extends Controller
                                 'stoplat'       => $getstop->stoplat,
                                 'stoplon'       => $getstop->stoplon
                             );
+                            $location = "/" . $getstop->stoplat . "," . $getstop->stoplon;
+                            $stoplocations .= $location;
+
                         }
+                        $driverlocationlink = 'https://www.google.com/maps/dir/' . $origin . $stoplocations . '/' . $destination;
+                    } else {
+                        $driverlocationlink = 'https://www.google.com/maps/dir/' . $origin . '/' . $destination;
                     }
 
                     $finalData  = array(

@@ -266,7 +266,6 @@ class OrdersController extends Controller
                         //$stop = "|" . $stop->stoplat . "," . $stop->stoplon;                       
                     }
                     $map = "https://maps.googleapis.com/maps/api/distancematrix/json?units=imperial&origins=" . $durapickupsheduleData->pickuplat . "," . $durapickupsheduleData->pickuplon . $stoplocation . "&destinations=" . $durapickupsheduleData->destinationlat . "," . $durapickupsheduleData->destinationlon . "&key=" . env('GOOGLE_KEY') . "";
-                    
                 } else {
                     $map = "https://maps.googleapis.com/maps/api/distancematrix/json?units=imperial&origins=" . $durapickupsheduleData->pickuplat . "," . $durapickupsheduleData->pickuplon . "&destinations=" . $durapickupsheduleData->destinationlat . "," . $durapickupsheduleData->destinationlon . "&key=" . env('GOOGLE_KEY') . "";
                 }
@@ -283,10 +282,8 @@ class OrdersController extends Controller
                 }
                 $distance = $distance  . " Mil " . " ";
                 $distance = $distance * 1.609344 . " Km";
-              
+
                 return response()->json(['status' => 201, 'message' => 'Data found', 'data' => $distance], 201);
-               
-                
             } catch (\Exception $e) {
                 dd($e);
                 // return response()->json(['message' => $e], 500);
@@ -364,7 +361,7 @@ class OrdersController extends Controller
                             );
                         }
                         $getusers     =  DB::table('users')->where('id', $request->user_id)->first();
-                        
+
                         $getvehicle   =  DB::table('vehicle')->where('id', $getpickup->vehicle_id)->where('service', 1)->first();
                         $getdriver    =  DB::table('driveuser')->where('id', 5)->first();
                         $searchdriver =  DB::table('search_driver')->orderBy('id', 'desc')->first();
@@ -381,7 +378,7 @@ class OrdersController extends Controller
                         /*distance by google api*/
                         $tasks_controller = new PushNotificationCommonController;
                         $distance = $tasks_controller->multipleStopDistance($getpickup->id);
-                         
+
                         $kmfare = @$getvehicle->kmfare;
                         $basefare = $getvehicle->basefare;
                         $vehicle_type = $getvehicle->vehicle_type;
@@ -436,7 +433,6 @@ class OrdersController extends Controller
                                 );
                                 $location = "/" . $getstop->stoplat . "," . $getstop->stoplon;
                                 $stoplocations .= $location;
-
                             }
                             $driverlocationlink = 'https://www.google.com/maps/dir/' . $origin . $stoplocations . '/' . $destination;
                         } else {

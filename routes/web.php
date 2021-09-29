@@ -28,6 +28,12 @@ $router->group(['prefix' => 'api'], function () use ($router) {
     $router->post('getDriverNotification','DriverManagementController@getDriverNotification');
     $router->post('driverPickupDecline','DriverManagementController@driverPickupDecline');
     $router->post('driverAcceptPickup','DriverManagementController@driverAcceptPickup');
+    $router->post('driverVerifyItems','DriverManagementController@driverVerifyItems');
+    $router->post('driverLicenseUpload','DriverManagementController@driverLicenseUpload');
+    $router->post('driverPoliceVerifcationUpload','DriverManagementController@driverPoliceVerifcationUpload');
+    $router->post('driverClearanceUpload','DriverManagementController@driverClearanceUpload');
+    $router->post('driverVehicleUpload','DriverManagementController@driverVehicleUpload');
+    $router->post('driverProfilePicUpload','DriverManagementController@driverProfilePicUpload');
     
     
     

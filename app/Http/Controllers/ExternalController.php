@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Hash;
 use  App\User;
 use URL;
-use DB;
+use DB;k7 
 
 class ExternalController extends Controller
 {

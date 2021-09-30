@@ -269,8 +269,8 @@ class CartController extends Controller
                 $km = $this->distance($request->pickuplat, $request->pickuplon, $request->destinationlat, $request->destinationlon, "K");
                 $distance = number_format($km, 0, '', '');
                 /*distance by google api*/
-                 $tasks_controller = new PushNotificationCommonController;
-                 $distance = $tasks_controller->multipleStopDistance($request->pickup_id);
+                $tasks_controller = new PushNotificationCommonController;
+                $distance = $tasks_controller->multipleStopDistance($request->pickup_id);
                 // echo $distance;
                 // die;               
                 $data = DB::table('vehicle')->where('service', 1)->get();
@@ -508,8 +508,8 @@ class CartController extends Controller
                     $i++;
                 }
             } catch (\Exception $e) {
-                dd($e);
-                // return response()->json(['message' => $e], 500);
+                // dd($e);
+                return response()->json(['message' => $e->getMessage()], 500);
             }
         }
     }
@@ -581,15 +581,10 @@ class CartController extends Controller
                 $is_update = DB::table('driver_current_location')->where('driver_id', $request->driver_id)->Update(['c_lat' => $request->c_lat, 'c_log' => $request->c_log]);
                 return response()->json(['status' => 200, 'message' => 'Request updated successfully', 'data' => $is_update], 200);
             } catch (\Exception $e) {
-                dd($e);
-                // return response()->json(['message' => $e], 500);
+                return response()->json(['message' => $e->getMessage()], 500);
             }
         }
     }
-
-    // close ----------------------
-
-
     public function denied_request(Request $request)
     {
         $rules = [
@@ -598,26 +593,20 @@ class CartController extends Controller
         ];
 
         $validator = Validator::make($request->all(), $rules);
-
-
         if ($validator->fails()) {
             return response()->json(['status' => 422, 'Status' => 'Failed', 'message' => $validator->messages()], 200);
         } else {
             try {
                 $is_update = DB::table('search_driver')->where('driver_id', $request->driver_id)->delete();
-
                 $finalData =  array(
                     'driver_id'     => $request->driver_id,
                     'pickup_id'     => $request->pickup_id,
                     'created_at'   => date('Y-m-d H:i:s')
                 );
-
                 $item   = DB::table('driverdecline')->insertGetId($finalData);
-
                 return response()->json(['status' => 200, 'message' => 'Request rejected successfully', 'data' => $is_update], 200);
             } catch (\Exception $e) {
-                dd($e);
-                // return response()->json(['message' => $e], 500);
+                return response()->json(['message' => $e->getMessage()], 500);
             }
         }
     }
@@ -628,10 +617,7 @@ class CartController extends Controller
             'driver_id' => 'required|int',
             'pickup_id' => 'required|int'
         ];
-
         $validator = Validator::make($request->all(), $rules);
-
-
         if ($validator->fails()) {
             return response()->json(['status' => 422, 'Status' => 'Failed', 'message' => $validator->messages()], 200);
         } else {
@@ -640,8 +626,7 @@ class CartController extends Controller
                 $is_update = DB::table('durapickupshedule')->where('id', $request->pickup_id)->Update(['driver_id' => $request->driver_id, 'status' => $request->status]);
                 return response()->json(['status' => 200, 'message' => 'Request rejected successfully', 'data' => $is_update], 200);
             } catch (\Exception $e) {
-                dd($e);
-                // return response()->json(['message' => $e], 500);
+                return response()->json(['message' => $e->getMessage()], 500);
             }
         }
     }
@@ -652,37 +637,34 @@ class CartController extends Controller
             'user_id' => 'required|int',
             'pickup_id' => 'required|int'
         ];
-
         $validator = Validator::make($request->all(), $rules);
-
-
         if ($validator->fails()) {
             return response()->json(['status' => 422, 'Status' => 'Failed', 'message' => $validator->messages()], 200);
         } else {
             $data = DB::table('durapickupshedule')->where('id', $request->pickup_id)->first();
-
             $driverdata = DB::table('driveuser')->where('is_online', 1)->get();
             if (!empty($data)) {
                 foreach ($driverdata as $drivervalue) {
-                    /*$origin = $data->pickuplat.",".$data->pickuplon; 
+                    /*
+                    $origin = $data->pickuplat.",".$data->pickuplon; 
                     $destination = $drivervalue->latitude.",".$drivervalue->longitude;
                     $api = file_get_contents("https://maps.googleapis.com/maps/api/distancematrix/json?units=imperial&origins=".$origin."&destinations=".$destination."&key=".env('GOOGLE_KEY')."");
                     $dataapis = json_decode($api);
                     print_r($dataapis);die;
-                    $times = $data->rows[0]->elements[0]->duration->text;*/
-                    $km = $this->distance($data->pickuplat, $data->pickuplon, $drivervalue->latitude, $drivervalue->longitude, "K");
-                    $distance = number_format($km, 0, '', '');
+                    $times = $data->rows[0]->elements[0]->duration->text;
+                    */
+                    // $km = $this->distance($data->pickuplat, $data->pickuplon, $drivervalue->latitude, $drivervalue->longitude, "K");
+                    // $distance = number_format($km, 0, '', '');
                     /*distance by google api*/
                     $tasks_controller = new PushNotificationCommonController;
                     $distance = $tasks_controller->multipleStopDistance($request->pickup_id);
-                   
 
-                    $km = $this->distance($data->pickuplat, $data->pickuplon, $data->destinationlat, $data->destinationlon, "K");
-                    $distance = number_format($km, 0, '', '');
+
+                    // $km = $this->distance($data->pickuplat, $data->pickuplon, $data->destinationlat, $data->destinationlon, "K");
+                    // $distance = number_format($km, 0, '', '');
                     /*distance by google api*/
                     $tasks_controller = new PushNotificationCommonController;
                     $distance = $tasks_controller->multipleStopDistance($request->pickup_id);
-                    
                     if ($distance < 500000) {
                         $finalData =  array(
                             'driver_id'     => $drivervalue->id,
@@ -695,7 +677,6 @@ class CartController extends Controller
                     }
                 }
             }
-
             $IsPresent = DB::table('durapickupshedule')->where('user_id', $request->user_id)->where('id', $request->pickup_id)->orderby('id', 'desc')->first();
             if (!empty($IsPresent)) {
                 if ($IsPresent->driver_id != 0 && !empty($IsPresent->driver_id)) {
@@ -711,7 +692,6 @@ class CartController extends Controller
                         $getdriver    =  DB::table('driveuser')->where('id', 5)->first();
                         // return response()->json(['status' => 201,'message'=>'No Driver found','data'=>null], 201);
                     }
-
                     $finalData    =  array(
                         'drivername'        => $getdriver->firstname . " " . $getdriver->lastname,
                         'driverphoto'       => URL::to('/') . "/public/Media/" . $getdriver->profilephoto_url,
@@ -723,7 +703,6 @@ class CartController extends Controller
                     );
                     return response()->json(['status' => 200, 'message' => 'Success', 'data' => $finalData], 200);
                 } else {
-
                     $searchdriver =  DB::table('search_driver')->orderBy('id', 'desc')->first();
                     $getdriver    =  DB::table('driveuser')->where('id', 5)->first();
                     $destination = $IsPresent->pickuplat . "," . $IsPresent->pickuplon;
@@ -736,7 +715,6 @@ class CartController extends Controller
                     // {
                     //     return response()->json(['status' => 201,'message'=>'No Driver found','data'=>null], 201);
                     // }
-
                     $finalData    =  array(
                         'drivername'        => $getdriver->firstname . " " . $getdriver->lastname,
                         'driverphoto'       => URL::to('/') . "/public/Media/" . $getdriver->profilephoto_url,
@@ -766,25 +744,20 @@ class CartController extends Controller
         } else {
             try {
                 $IsPresent = DB::table('durapickupshedule')->where('user_id', $request->user_id)->where('vehicle_id', '!=', null)->orderby('id', 'desc')->first();
-
-
                 if ($IsPresent) {
                     $services = DB::table('durapickup_services as ds')
                         ->join('pricecard as pc', 'ds.service_id', '=', 'pc.id')
                         ->where('ds.pickup_id', $IsPresent->id)
                         ->select('pc.id', 'pc.services', 'pc.servicefee')
                         ->get();
-
                     $getpickup  = DB::table('durapickupshedule')->where('id', $IsPresent->id)->first();
                     // echo "<pre>";
                     // print_r($getpickup);
                     // die;
-
                     if ($IsPresent->coupon != null) {
                         $rowget = DB::table('promocode')->where('name', $IsPresent->coupon)->count();
                         if ($rowget > 0) {
                             $row = DB::table('promocode')->where('name', $IsPresent->coupon)->first();
-
                             $coupon    =  array(
                                 'id'            => @$row->id,
                                 'couponname'    => @$row->name,
@@ -814,7 +787,7 @@ class CartController extends Controller
                         /*distance by google api*/
                         $tasks_controller = new PushNotificationCommonController;
                         $distance = $tasks_controller->multipleStopDistance($getpickup->id);
-                        
+
 
 
                         $totalprice = $distance * $getvehicle->kmfare + $getvehicle->basefare;
@@ -857,7 +830,6 @@ class CartController extends Controller
                                 );
                                 $location = "/" . $getstop->stoplat . "," . $getstop->stoplon;
                                 $stoplocations .= $location;
-
                             }
                             $driverlocationlink = 'https://www.google.com/maps/dir/' . $origin . $stoplocations . '/' . $destination;
                         } else {
@@ -986,7 +958,7 @@ class CartController extends Controller
                     /*distance by google api*/
                     $tasks_controller = new PushNotificationCommonController;
                     $distance = $tasks_controller->multipleStopDistance($getpickup->id);
-                    
+
                     if ($getpickup->tip != '') {
                         $tip = $getpickup->tip;
                     } else {
@@ -1042,7 +1014,6 @@ class CartController extends Controller
                             );
                             $location = "/" . $getstop->stoplat . "," . $getstop->stoplon;
                             $stoplocations .= $location;
-
                         }
                         $driverlocationlink = 'https://www.google.com/maps/dir/' . $origin . $stoplocations . '/' . $destination;
                     } else {

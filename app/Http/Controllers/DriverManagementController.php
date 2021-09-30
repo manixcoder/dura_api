@@ -17,7 +17,6 @@ use QRCode;
 
 class DriverManagementController extends Controller
 {
-
     public function sendOTP(Request $request)
     {
         $rules = [
@@ -26,10 +25,9 @@ class DriverManagementController extends Controller
             'message' => 'required',
             'otp' => 'required',
         ];
-
         $validator = Validator::make($request->all(), $rules);
         if ($validator->fails()) {
-            return response()->json(['statusCode' => 422, 'status' => 'Failed', 'message' => $validator->messages()], 200);
+            return response()->json(['status' => 422,  'message' => $validator->messages()], 200);
         } else {
             try {
                 $driverData = DB::table('driveuser')->where('mobile', $request->input('mobile'))->get();
@@ -89,7 +87,7 @@ class DriverManagementController extends Controller
         ];
         $validator = Validator::make($request->all(), $rules);
         if ($validator->fails()) {
-            return response()->json(['StatusCode' => 422, 'status' => 'Failed', 'message' => $validator->messages()], 200);
+            return response()->json(['status' => 422,  'message' => $validator->messages()], 200);
         } else {
             try {
                 if (is_numeric($request->input('mobile'))) {
@@ -139,8 +137,7 @@ class DriverManagementController extends Controller
         $validator = Validator::make($request->all(), $rules);
         if ($validator->fails()) {
             return response()->json([
-                'statusCode' => 405,
-                'status' => 'failed',
+                'status' => 405,
                 'message' => $validator->messages()
             ], 409);
         } else {
@@ -196,11 +193,7 @@ class DriverManagementController extends Controller
                     $referralcode           = $tasks_controller->generateReferalCodeDriver();
                     /* QR Code Generate start*/
                     require base_path('public/phpqrcode/qrlib.php');
-                    //include('phpqrcode/qrlib.php');
-
                     $tempDir = base_path('public/Media/QRCode/');
-
-
                     $codeContents = $codeContents = $request->input('country_code') . $request->input('mobile');
                     $fileName = $request->input('mobile') . md5($codeContents) . '.png';
                     $pngAbsoluteFilePath = $tempDir . $fileName;
@@ -267,11 +260,6 @@ class DriverManagementController extends Controller
                     );
                     $driverWallet = DB::table('driver_wallet')->insert($walletData);
                     $addDatadoc = DB::table('drivepersonaldoc')->insertGetId($docdata);
-                    // $driverData = DB::table('driveuser')->where('id', $driver_id)->first();
-
-                    // $driverDoc = DB::table('drivepersonaldoc')->where('driver_id', $driver_id)->first();
-                    // $driverWallet = DB::table('driver_wallet')->where('driver_id', $driver_id)->first();
-
 
                     $driverData = DB::table('driveuser')->where('id', $driver_id)->first();
                     if ($driverData->profilephoto_url != "") {
@@ -284,7 +272,6 @@ class DriverManagementController extends Controller
                     } else {
                         $driverData->qr_code =  $driverData->qr_code;
                     }
-
                     $driverDoc = DB::table('drivepersonaldoc')->where('driver_id',  $driver_id)->first();
                     if ($driverDoc->crno_image != '') {
                         $driverDoc->crno_image = URL::to('/') . "/public/Media/" . $driverDoc->crno_image;
@@ -326,7 +313,6 @@ class DriverManagementController extends Controller
                         'driverDoc'          => $driverDoc,
                         'driverWallet'       => $driverWallet,
                         'token'              => $this->respondWithToken($token),
-
                     );
                     $data = collect(["status" => 200, "message" => "Driver registration sucessfully", "data" => $finalData]);
                     //$data = collect(["status" => 200, "status" => "Success", "data" => $driverData]);
@@ -348,7 +334,7 @@ class DriverManagementController extends Controller
         ];
         $validator = Validator::make($request->all(), $rules);
         if ($validator->fails()) {
-            return response()->json(['StatusCode' => 422, 'status' => 'Failed', 'message' => $validator->messages()], 200);
+            return response()->json(['status' => 422, 'message' => $validator->messages()], 200);
         } else {
             try {
                 $userData = DB::table('driveuser')->where('id', $request->driver_id)->first();
@@ -457,10 +443,7 @@ class DriverManagementController extends Controller
                         'created_at' => date('Y-m-d H:i:s'),
                         'updated_at' => date('Y-m-d H:i:s'),
                     );
-
                     $addDatadoc = DB::table('drivepersonaldoc')->where('driver_id', $request->driver_id)->update($docdata);
-
-
                     $driverData = DB::table('driveuser')->where('id', $request->driver_id)->first();
                     if ($driverData->profilephoto_url != "") {
                         $driverData->profilephoto_url = URL::to('/') . "/public/Media/" . $driverData->profilephoto_url;
@@ -472,7 +455,6 @@ class DriverManagementController extends Controller
                     } else {
                         $driverData->qr_code =  $driverData->qr_code;
                     }
-
                     $driverDoc = DB::table('drivepersonaldoc')->where('driver_id',  $request->driver_id)->first();
                     if ($driverDoc->crno_image != '') {
                         $driverDoc->crno_image = URL::to('/') . "/public/Media/" . $driverDoc->crno_image;
@@ -529,7 +511,7 @@ class DriverManagementController extends Controller
         ];
         $validator = Validator::make($request->all(), $rules);
         if ($validator->fails()) {
-            return response()->json(['StatusCode' => 422, 'status' => 'Failed', 'message' => $validator->messages()], 200);
+            return response()->json(['status' => 422,  'message' => $validator->messages()], 200);
         } else {
             try {
                 $driverData = DB::table('driveuser')->where('id', $request->driver_id)->first();
@@ -543,7 +525,6 @@ class DriverManagementController extends Controller
                 } else {
                     $driverData->qr_code =  $driverData->qr_code;
                 }
-
                 $driverDoc = DB::table('drivepersonaldoc')->where('driver_id',  $request->driver_id)->first();
                 if ($driverDoc->crno_image != '') {
                     $driverDoc->crno_image = URL::to('/') . "/public/Media/" . $driverDoc->crno_image;
@@ -576,9 +557,6 @@ class DriverManagementController extends Controller
                     $driverDoc->police_clearance_image =  $driverDoc->police_clearance_image;
                 }
                 $driverWallet = DB::table('driver_wallet')->where('driver_id', $request->driver_id)->first();
-                // echo "<pre>";
-                // print_r($driverData); 
-                // die;
                 $finalData = array(
                     'driverData'         => $driverData,
                     'driverDoc'          => $driverDoc,
@@ -598,7 +576,7 @@ class DriverManagementController extends Controller
         ];
         $validator = Validator::make($request->all(), $rules);
         if ($validator->fails()) {
-            return response()->json(['StatusCode' => 422, 'status' => 'Failed', 'message' => $validator->messages()], 200);
+            return response()->json(['status' => 422,  'message' => $validator->messages()], 200);
         } else {
             try {
                 $driverData = DB::table('driveuser')->where('id', $request->driver_id)->first();
@@ -615,7 +593,6 @@ class DriverManagementController extends Controller
                     } else {
                         $driverData->qr_code =  $driverData->qr_code;
                     }
-
                     $driverDoc = DB::table('drivepersonaldoc')->where('driver_id',  $request->driver_id)->first();
                     if ($driverDoc->crno_image != '') {
                         $driverDoc->crno_image = URL::to('/') . "/public/Media/" . $driverDoc->crno_image;
@@ -677,7 +654,7 @@ class DriverManagementController extends Controller
         ];
         $validator = Validator::make($request->all(), $rules);
         if ($validator->fails()) {
-            return response()->json(['StatusCode' => 422, 'status' => 'Failed', 'message' => $validator->messages()], 200);
+            return response()->json(['status' => 422,  'message' => $validator->messages()], 200);
         } else {
             try {
                 $driverData = DB::table('driveuser')->where('id', $request->driver_id)->first();
@@ -708,7 +685,7 @@ class DriverManagementController extends Controller
         ];
         $validator = Validator::make($request->all(), $rules);
         if ($validator->fails()) {
-            return response()->json(['StatusCode' => 422, 'status' => 'Failed', 'message' => $validator->messages()], 200);
+            return response()->json(['status' => 422, 'message' => $validator->messages()], 200);
         } else {
             try {
                 $driverData = DB::table('driveuser')->where('id', $request->driver_id)->first();
@@ -786,7 +763,7 @@ class DriverManagementController extends Controller
         ];
         $validator = Validator::make($request->all(), $rules);
         if ($validator->fails()) {
-            return response()->json(['StatusCode' => 422, 'status' => 'Failed', 'message' => $validator->messages()], 200);
+            return response()->json(['status' => 422,  'message' => $validator->messages()], 200);
         } else {
             try {
                 $pickupsheduleData = DB::table('durapickupshedule')
@@ -834,7 +811,7 @@ class DriverManagementController extends Controller
         ];
         $validator = Validator::make($request->all(), $rules);
         if ($validator->fails()) {
-            return response()->json(['StatusCode' => 422, 'status' => 'Failed', 'message' => $validator->messages()], 200);
+            return response()->json(['status' => 422,  'message' => $validator->messages()], 200);
         } else {
             try {
                 $pickupsheduleData = DB::table('durapickupshedule')
@@ -866,7 +843,7 @@ class DriverManagementController extends Controller
         ];
         $validator = Validator::make($request->all(), $rules);
         if ($validator->fails()) {
-            return response()->json(['StatusCode' => 422, 'status' => 'Failed', 'message' => $validator->messages()], 200);
+            return response()->json(['status' => 422,  'message' => $validator->messages()], 200);
         } else {
             try {
                 $driverData = DB::table('driveuser')->where('id', $request->driver_id)->first();
@@ -891,7 +868,7 @@ class DriverManagementController extends Controller
         ];
         $validator = Validator::make($request->all(), $rules);
         if ($validator->fails()) {
-            return response()->json(['StatusCode' => 422, 'status' => 'Failed', 'message' => $validator->messages()], 200);
+            return response()->json(['status' => 422,  'message' => $validator->messages()], 200);
         } else {
             try {
                 $driverData = DB::table('driveuser')->where('id', $request->driver_id)->first();
@@ -961,13 +938,12 @@ class DriverManagementController extends Controller
     }
     public function driverServiceArea(Request $request)
     {
-
         $rules = [
             'country_code' => 'required',
         ];
         $validator = Validator::make($request->all(), $rules);
         if ($validator->fails()) {
-            return response()->json(['StatusCode' => 422, 'status' => 'Failed', 'message' => $validator->messages()], 200);
+            return response()->json(['status' => 422,  'message' => $validator->messages()], 200);
         } else {
             try {
                 $countryData = DB::table('country')
@@ -1167,15 +1143,12 @@ class DriverManagementController extends Controller
     {
         $rules = [
             'driver_id' => 'required',
-            'front_licenseImage' => 'required',
-            'back_licenseImage' => 'required',
-            'license_no' => 'required',
             'latitude' => 'required',
             'longitude' => 'required',
         ];
         $validator = Validator::make($request->all(), $rules);
         if ($validator->fails()) {
-            return response()->json(['StatusCode' => 422, 'status' => 'Failed', 'message' => $validator->messages()], 200);
+            return response()->json(['status' => 422,  'message' => $validator->messages()], 200);
         } else {
             try {
                 $driverData = DB::table('driveuser')->where('id', $request->driver_id)->first();
@@ -1268,14 +1241,12 @@ class DriverManagementController extends Controller
     {
         $rules = [
             'driver_id' => 'required',
-            'police_clearance_image' => 'required',
-            'police_clearance_no' => 'required',
             'latitude' => 'required',
             'longitude' => 'required',
         ];
         $validator = Validator::make($request->all(), $rules);
         if ($validator->fails()) {
-            return response()->json(['StatusCode' => 422, 'status' => 'Failed', 'message' => $validator->messages()], 200);
+            return response()->json(['status' => 422,  'message' => $validator->messages()], 200);
         } else {
             try {
                 $driverData = DB::table('driveuser')->where('id', $request->driver_id)->first();
@@ -1361,14 +1332,12 @@ class DriverManagementController extends Controller
     {
         $rules = [
             'driver_id' => 'required',
-            'crno_image' => 'required',
-            'cr_no' => 'required',
             'latitude' => 'required',
             'longitude' => 'required',
         ];
         $validator = Validator::make($request->all(), $rules);
         if ($validator->fails()) {
-            return response()->json(['StatusCode' => 422, 'status' => 'Failed', 'message' => $validator->messages()], 200);
+            return response()->json(['status' => 422, 'message' => $validator->messages()], 200);
         } else {
             try {
                 $driverData = DB::table('driveuser')->where('id', $request->driver_id)->first();
@@ -1459,14 +1428,12 @@ class DriverManagementController extends Controller
     {
         $rules = [
             'driver_id' => 'required',
-            'vehiclephoto' => 'required',
-            'vehicle_name' => 'required',
             'latitude' => 'required',
             'longitude' => 'required',
         ];
         $validator = Validator::make($request->all(), $rules);
         if ($validator->fails()) {
-            return response()->json(['StatusCode' => 422, 'status' => 'Failed', 'message' => $validator->messages()], 200);
+            return response()->json(['status' => 422, 'message' => $validator->messages()], 200);
         } else {
             try {
                 $driverData = DB::table('driveuser')->where('id', $request->driver_id)->first();
@@ -1555,13 +1522,12 @@ class DriverManagementController extends Controller
     {
         $rules = [
             'driver_id' => 'required',
-            'profilephoto_url' => 'required',
             'latitude' => 'required',
             'longitude' => 'required',
         ];
         $validator = Validator::make($request->all(), $rules);
         if ($validator->fails()) {
-            return response()->json(['StatusCode' => 422, 'status' => 'Failed', 'message' => $validator->messages()], 200);
+            return response()->json(['status' => 422, 'message' => $validator->messages()], 200);
         } else {
             try {
                 $driverData = DB::table('driveuser')->where('id', $request->driver_id)->first();

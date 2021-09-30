@@ -2,16 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
-use App\Track;
-use App\Alarm_create;
-use App\Templates;
-use App\User;
-use DB;
-use Hash;
-use URL;
 use App\Http\Controllers\PushNotificationCommonController;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Http\Request;
+use URL;
+use DB;
+
+
 
 class OrdersController extends Controller
 {
@@ -237,56 +234,19 @@ class OrdersController extends Controller
     public function orderDetailsUserId(Request $request)
     {
         $rules = [
-            'user_id' => 'required|int',
             'page_id' => 'required|int',
-            'totalcount' => 'required|int',
         ];
         $validator = Validator::make($request->all(), $rules);
         if ($validator->fails()) {
-            return response()->json([
-                'status' => 422,
-                'Status' => 'Failed',
-                'message' => $validator->messages()
-            ], 200);
+            return response()->json(['status' => 422, 'message' => $validator->messages()], 200);
         } else {
             try {
-
-                $durapickupsheduleData = DB::table('durapickupshedule')
-                    ->where('id', 408)
-                    ->orderby('id', 'desc')
-                    ->first();
-                if ($durapickupsheduleData->is_stop == '1') {
-                    $stopData = DB::table('pickup_stoplocation')
-                        ->where('pickup_id', $durapickupsheduleData->id)
-                        ->get();
-                    $stoplocation = '';
-                    foreach ($stopData as $stop) {
-                        $location = "|" . $stop->stoplat . "," . $stop->stoplon;
-                        $stoplocation .= $location;
-                        //$stop = "|" . $stop->stoplat . "," . $stop->stoplon;                       
-                    }
-                    $map = "https://maps.googleapis.com/maps/api/distancematrix/json?units=imperial&origins=" . $durapickupsheduleData->pickuplat . "," . $durapickupsheduleData->pickuplon . $stoplocation . "&destinations=" . $durapickupsheduleData->destinationlat . "," . $durapickupsheduleData->destinationlon . "&key=" . env('GOOGLE_KEY') . "";
-                } else {
-                    $map = "https://maps.googleapis.com/maps/api/distancematrix/json?units=imperial&origins=" . $durapickupsheduleData->pickuplat . "," . $durapickupsheduleData->pickuplon . "&destinations=" . $durapickupsheduleData->destinationlat . "," . $durapickupsheduleData->destinationlon . "&key=" . env('GOOGLE_KEY') . "";
-                }
-                // echo $map;
-                // $map = "https://maps.googleapis.com/maps/api/distancematrix/json?units=imperial&origins=28.617276,77.180989|27.307315,77.982991|28.976272,78.649494|28.664557,77.426533&destinations=27.6901798,76.8147774&key=" . env('GOOGLE_KEY') . "";
-                $api = file_get_contents($map);
-                $data = json_decode($api);
-                $times = @$data->rows[0]->elements[0]->duration->text;
-                $distance = 0;
-                foreach (@$data->rows as $row) {
-                    $distancetext = $row->elements[0]->distance->text;
-                    $distanceText = explode(" ", $distancetext);
-                    $distance = $distance + $distanceText[0];
-                }
-                $distance = $distance  . " Mil " . " ";
-                $distance = $distance * 1.609344 . " Km";
-
+                $tasks_controller = new PushNotificationCommonController;
+                $distance = $tasks_controller->multipleStopDistance($request->page_id);
+                //$distance = $tasks_controller->multipleStopDistanceTime($request->page_id);
                 return response()->json(['status' => 201, 'message' => 'Data found', 'data' => $distance], 201);
             } catch (\Exception $e) {
-                dd($e);
-                // return response()->json(['message' => $e], 500);
+                return response()->json(['message' => $e->getMessage()], 500);
             }
         }
     }
@@ -482,8 +442,7 @@ class OrdersController extends Controller
                     return response()->json(['status' => 201, 'message' => 'No Data found', 'data' => ""], 201);
                 }
             } catch (\Exception $e) {
-                dd($e);
-                // return response()->json(['message' => $e], 500);
+                return response()->json(['message' => $e->getMessage()], 500);
             }
         }
     }

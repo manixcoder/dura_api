@@ -613,8 +613,10 @@ class UserController extends Controller
                         
                 try 
                 {
-                    $finalData  =   array('google'      => $request->google,
-                                          'facebook'    => $request->facebook);
+                    $finalData  =   array(
+                        'google'      => $request->has('google') ? $request->google : "",
+                        'facebook'    => $request->has('facebook') ? $request->facebook : "",
+                    );
                     
                     $is_update  = DB::table('users')->where('id', $request->user_id)->update($finalData);
                     if(!empty($is_update))

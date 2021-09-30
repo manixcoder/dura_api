@@ -264,13 +264,13 @@ class PushNotificationCommonController extends Controller
 					$durationValue = $durationValue + $distancevalue;
 					$dynamiclocation .= $location;
 				} else {
-					if ($totalRecode - 1 === $key) {
-						$map = "https://maps.googleapis.com/maps/api/distancematrix/json?units=matrix&origins=" . $dynamiclocation . "&destinations=" . $location . "&key=" . env('GOOGLE_KEY') . "";
-						$api = file_get_contents($map);
-						$data = json_decode($api);
+					$data = json_decode($api);
 						$distancevalue = @$data->rows[0]->elements[0]->duration->value;
 						$durationValue = $durationValue + $distancevalue;
-						$dynamiclocation = '';
+						$d			if ($totalRecode - 1 === $key) {
+						$map = "https://maps.googleapis.com/maps/api/distancematrix/json?units=matrix&origins=" . $dynamiclocation . "&destinations=" . $location . "&key=" . env('GOOGLE_KEY') . "";
+						$api = file_get_contents($map);
+			ynamiclocation = '';
 						$dynamiclocation .= $location;
 					}
 				}

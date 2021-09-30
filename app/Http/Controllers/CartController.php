@@ -22,10 +22,7 @@ class CartController extends Controller
             'item_id' => 'required',
             'qty' => 'required'
         ];
-
         $validator = Validator::make($request->all(), $rules);
-
-
         if ($validator->fails()) {
             return response()->json(['status' => 422, 'message' => $validator->messages()], 200);
         } else {

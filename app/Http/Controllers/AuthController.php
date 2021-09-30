@@ -179,10 +179,8 @@ class AuthController extends Controller
         ]);
 
         if (!empty($request->get('phone'))) {
-
             $credentials = $request->only(['phone', 'password']);
         } else {
-
             $credentials = $request->only(['email', 'password']);
         }
         if (!$token = Auth::attempt($credentials)) {
@@ -190,29 +188,25 @@ class AuthController extends Controller
         } else {
             $finalData = array();
             if (!empty($request->get('phone'))) {
-                //echo "phone";die;
                 $usertype = User::where('phone', $request->phone)->first();
                 if ($usertype['country_code'] != $request->country_code) {
                     return response()->json(['message' => 'Country code not matched', 'status' => 201], 401);
                 }
             } elseif (filter_var($request->get('email'), FILTER_VALIDATE_EMAIL)) {
-                //echo "email";die;
                 $usertype = User::where('email', $request->email)->first();
             }
             if ($request->country_id != $usertype['country_id']) {
-
                 return response()->json(['message' => 'Country not matched', 'status' => 201], 401);
             }
             $finalData = array('token' => $this->respondWithToken($token));
-            //print_r($usertype['country_code']);die;
             $tasks_controller = new PushNotificationCommonController;
             $message = "You have login successfully with Duradrive at " . date("F j, Y, g:i A");
             $ext = 'login';
             $tasks_controller->postNotification($usertype['id'], $message, $ext);
             $referalCode = DB::table('users_referralcode')->where('user_id', $usertype['id'])->where('is_used','0')->first();
             $data = collect([
-                "status" => 200,
-                "message" => "Success",
+                "status"        => 200,
+                "message"       => "Success",
                 'user_id'       => $usertype['id'],
                 'first_name'    => $usertype['first_name'],
                 'last_name'     => $usertype['last_name'],
@@ -220,11 +214,9 @@ class AuthController extends Controller
                 'phone'         => $usertype['phone'],
                 'profile_image' => URL::to('/') . "/public/Media/" . $usertype['profile_image'],
                 "data"          => $this->respondWithToken($token),
-                'referalCode' => $referalCode,
+                'referalCode'   => $referalCode,
             ]);
             return response()->json($data, 200);
-            //print_r($finalData);die;        $this->respondWithToken($token)->getData()->token;            
-
         }
     }
 }

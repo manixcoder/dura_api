@@ -4,12 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
-use App\Track;
-use App\Alarm_create;
-use App\Templates;
 use  App\User;
 use DB;
-use Hash;
 
 class HomeController extends Controller
 {
@@ -22,10 +18,6 @@ class HomeController extends Controller
         if ($validator->fails()) {
             return response()->json(['StatusCode' => 422, 'Status' => 'Failed', 'message' => $validator->messages()], 200);
         }
-        //  $file = $request->file('file');
-        //  $ext=explode('.',$file->getClientOriginalName())[1];
-        //  $file_name1=uniqid('file').'.'.$ext;  
-        //  $file->move('public/Media/', $file_name1);
         $interestedValues = array();
         if ($file = $request->file('file')) {
             $destinationPath = base_path('public/Media/');
@@ -37,9 +29,10 @@ class HomeController extends Controller
     }
     public function get_loans(Request $request)
     {
-
         try {
-            $addData = DB::table('loan_apply')->Join('product_gallery', 'loan_apply.product_id', 'product_gallery.product_id')->get();
+            $addData = DB::table('loan_apply')
+            ->Join('product_gallery', 'loan_apply.product_id', 'product_gallery.product_id')
+            ->get();
             $myArr = array();
             foreach ($addData as $item) {
                 $item = (array)$item;
@@ -50,7 +43,6 @@ class HomeController extends Controller
                 $item->image = 'https://' . $request->server->get('SERVER_NAME') . "/wmc_admin/public/product_image/" . $item->image;
                 array_push($myArr, $item);
             }
-
             $data = collect(["status" => "200", "message" => "Success", "data" => $myArr]);
             return response()->json($data, 200);
         } catch (\Exception $e) {
@@ -95,23 +87,12 @@ class HomeController extends Controller
                     'customer_id' => $request->customer_id,
                     'product_id' => $request->product_id,
                     'monthly_emi' => $request->monthly_emi,
-                    /*'total_loan_payment' => $request->total_loan_payment ,*/
                     'down_payment' => $request->down_payment,
                     'address' => $request->address,
                     'phone' => $request->phone,
                     'account_holder_name' => $request->account_holder_name,
-                    /*'bank_name' => $request->bank_name,*/
-                    /*'ifsc_code' => $request->ifsc_code,*/
-                    /* 'account_number' => $request->account_number ,*/
-                    /* 'purchase_detail' => $request->purchase_detail,*/
                     'occupation' => $request->occupation,
-                    /*'payment_mode' => $request->payment_mode,*/
                     'repayment_option' => $request->repayment_option,
-                    /* 'payment_remark' => $request->payment_remark,*/
-                    /*   'total_emis' => $request->total_emis,*/
-                    /* 'family_book' => $request->family_book,*/
-                    /*  'identity_card' => $request->identity_card,*/
-                    /*'employment_contract' => $request->employment_contract,*/
                     'status' => "Pending",
                 );
                 $addData = DB::table('loan_apply')->insertGetId($data);
@@ -143,7 +124,11 @@ class HomeController extends Controller
         $wherehousedata = DB::table('warehouse')->get(['id', 'warehouse_name']);
 
         if ($wherehousedata != '') {
-            $data = collect(["status" => "100", "message" => "Success", "data" => $wherehousedata]);
+            $data = collect([
+                "status" => "100", 
+                "message" => "Success", 
+                "data" => $wherehousedata
+            ]);
             return response()->json($data, 200);
         } else {
             $data = collect(["status" => "120", "message" => "Faild"]);
@@ -153,7 +138,9 @@ class HomeController extends Controller
 
     public function get_color()
     {
-        $colordata = DB::table('color')->orderBy('color_name', 'Asc')->get(['id', 'color_hex_code', 'color_name']);
+        $colordata = DB::table('color')
+        ->orderBy('color_name', 'Asc')
+        ->get(['id', 'color_hex_code', 'color_name']);
 
         if ($colordata != '') {
             $data = collect(["status" => "100", "message" => "Success", "data" => $colordata]);
@@ -166,7 +153,9 @@ class HomeController extends Controller
 
     public function get_customers()
     {
-        $customers = DB::table('users')->where('users_role', 3)->get(['id', 'first_name', 'last_name', 'email', 'phone', 'home_phone', 'wechat_whatsapp_no', 'address', 'status', 'dob', 'gender']);
+        $customers = DB::table('users')
+        ->where('users_role', 3)
+        ->get(['id', 'first_name', 'last_name', 'email', 'phone', 'home_phone', 'wechat_whatsapp_no', 'address', 'status', 'dob', 'gender']);
 
         if ($customers != '') {
             $data = collect(["status" => "100", "message" => "Success", "data" => $customers]);
@@ -234,7 +223,9 @@ class HomeController extends Controller
         $this->validate($request, [
             'edit_id' => 'required|integer',
         ]);
-        $customerdata = User::where('id', $request->edit_id)->where('users_role', 3)->first();
+        $customerdata = User::where('id', $request->edit_id)
+        ->where('users_role', 3)
+        ->first();
 
         if ($customerdata != '') {
             if ($customerdata->email == $request->email) {
@@ -280,11 +271,17 @@ class HomeController extends Controller
                 );
 
                 $editdata = User::where('id', $request->edit_id)->update($data);
-                $data = collect(["status" => "100", "message" => "Data updated successfully"]);
+                $data = collect([
+                    "status" => "100", 
+                    "message" => "Data updated successfully"
+                ]);
                 return response()->json($data, 200);
             }
         } else {
-            return response()->json(['status' => 102, 'message' => 'Data not found of this id'], 401);
+            return response()->json([
+                'status' => 102, 
+                'message' => 'Data not found of this id'
+            ], 401);
         }
     }
 
@@ -332,9 +329,7 @@ class HomeController extends Controller
 
     public function get_category()
     {
-
         $brand = DB::table('brand')->get();
-
         foreach ($brand as $value) {
             $user['id'] = $value->id;
             $user['category_name'] = $value->brand_name;
@@ -342,7 +337,6 @@ class HomeController extends Controller
             $user['image'] = "https://162.241.87.160/wmc_admin/public/brand_image/" . $value->image;
             $VendorList[] = $user;
         }
-
         if ($user != '') {
             $data = collect(["status" => "100", "message" => "Success", "data" => $VendorList]);
             return response()->json($data, 200);

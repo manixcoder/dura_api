@@ -2,13 +2,16 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Controllers\PushNotificationCommonController;
-use Illuminate\Support\Facades\Validator;
 use Illuminate\Http\Request;
-use URL;
+use Illuminate\Support\Facades\Validator;
+use App\Http\Controllers\PushNotificationCommonController;
+use App\Track;
+use App\Alarm_create;
+use App\Templates;
+use App\User;
 use DB;
-
-
+use Hash;
+use URL;
 
 class OrdersController extends Controller
 {
@@ -220,34 +223,17 @@ class OrdersController extends Controller
 
     public function place_order(Request $request)
     {
+
         $rules = [
             'user_id' => 'required|integer'
         ];
         $validator = Validator::make($request->all(), $rules);
+
         if ($validator->fails()) {
             return response()->json(['StatusCode' => 422, 'Status' => 'Failed', 'message' => $validator->messages()], 200);
         } else {
             $data = collect(["status" => "200", "message" => "Order placed", "data" => 9283]);
             return response()->json($data, 200);
-        }
-    }
-    public function orderDetailsUserId(Request $request)
-    {
-        $rules = [
-            'page_id' => 'required|int',
-        ];
-        $validator = Validator::make($request->all(), $rules);
-        if ($validator->fails()) {
-            return response()->json(['status' => 422, 'message' => $validator->messages()], 200);
-        } else {
-            try {
-                $tasks_controller = new PushNotificationCommonController;
-                $distance = $tasks_controller->multipleStopDistance($request->page_id);
-                //$distance = $tasks_controller->multipleStopDistanceTime($request->page_id);
-                return response()->json(['status' => 201, 'message' => 'Data found', 'data' => $distance], 201);
-            } catch (\Exception $e) {
-                return response()->json(['message' => $e->getMessage()], 500);
-            }
         }
     }
 
@@ -260,58 +246,55 @@ class OrdersController extends Controller
         ];
         $validator = Validator::make($request->all(), $rules);
         if ($validator->fails()) {
-            return response()->json([
-                'status' => 422,
-                'Status' => 'Failed',
-                'message' => $validator->messages()
-            ], 200);
+            return response()->json(['status' => 422, 'Status' => 'Failed', 'message' => $validator->messages()], 200);
         } else {
             try {
-                $IsPresent = DB::table('durapickupshedule')
-                    ->where('user_id', $request->user_id)
-                    ->where('driver_id', '!=', 0)
-                    ->where('vehicle_id', '!=', null)
-                    ->orderby('id', 'desc')
-                    ->count();
+                $IsPresent = DB::table('durapickupshedule')->where('user_id', $request->user_id)->where('driver_id', '!=', 0)->where('vehicle_id', '!=', null)->orderby('id', 'desc')->count();
                 if ($request->status != "") {
-                    $IsPresent = DB::table('durapickupshedule')
-                        ->where('user_id', $request->user_id)
-                        ->where('status', $request->status)
-                        ->orderby('id', 'desc')
-                        ->count();
+                    $IsPresent = DB::table('durapickupshedule')->where('user_id', $request->user_id)->where('status', $request->status)->orderby('id', 'desc')->count();
                 }
                 if ($IsPresent > 0) {
-                    $IsPresent = DB::table('durapickupshedule')
-                        ->where('user_id', $request->user_id)
-                        ->where('driver_id', '!=', 0)
-                        ->where('order_no', '!=', 1)
-                        ->where('vehicle_id', '!=', null)
-                        ->offset($request->page_id)
-                        ->limit($request->totalcount)
-                        ->orderby('id', 'desc')
-                        ->get();
-                    //print_r($IsPresent);die();
-                    if ($request->status != "") {
+                    if ($request->page_id == '1') {
+                        //echo "Hello";die;
                         $IsPresent = DB::table('durapickupshedule')
                             ->where('user_id', $request->user_id)
-                            ->where('status', $request->status)
+                            ->where('driver_id', '!=', 0)
                             ->where('order_no', '!=', 1)
                             ->where('vehicle_id', '!=', null)
+                            ->where('status', $request->status)
+                            ->limit($request->totalcount)
                             ->orderby('id', 'desc')
+                            ->get();
+                    } else {
+                        //echo "Hi";die;
+                        $IsPresent = DB::table('durapickupshedule')
+                            ->where('user_id', $request->user_id)
+                            ->where('driver_id', '!=', 0)
+                            ->where('order_no', '!=', 1)
+                            ->where('vehicle_id', '!=', null)
+                            ->where('status', $request->status)
                             ->offset($request->page_id)
                             ->limit($request->totalcount)
+                            ->orderby('id', 'desc')
                             ->get();
                     }
+
+
+                    // if ($request->status != "") {
+                    //     $IsPresent = DB::table('durapickupshedule')
+                    //     ->where('user_id', $request->user_id)
+                    //     ->where('status', $request->status)
+                    //     ->where('order_no', '!=', 1)
+                    //     ->where('vehicle_id', '!=', null)
+                    //     ->orderby('id', 'desc')
+                    //     ->offset($request->page_id)
+                    //     ->limit($request->totalcount)
+                    //     ->get();
+                    // }
                     foreach ($IsPresent as $ispresent) {
-                        $getpickup    =  DB::table('durapickupshedule')
-                            ->where('id', $ispresent->id)
-                            ->where('order_no', '!=', 1)
-                            ->where('vehicle_id', '!=', null)
-                            ->first();
+                        $getpickup    =  DB::table('durapickupshedule')->where('id', $ispresent->id)->where('order_no', '!=', 1)->where('vehicle_id', '!=', null)->first();
                         if ($ispresent->coupon != null) {
-                            $row = DB::table('promocode')
-                                ->where('name', $ispresent->coupon)
-                                ->first();
+                            $row = DB::table('promocode')->where('name', $ispresent->coupon)->first();
                             $coupon    =  array(
                                 'id' => $row->id,
                                 'couponname' => $row->name,
@@ -321,36 +304,29 @@ class OrdersController extends Controller
                             );
                         }
                         $getusers     =  DB::table('users')->where('id', $request->user_id)->first();
-
                         $getvehicle   =  DB::table('vehicle')->where('id', $getpickup->vehicle_id)->where('service', 1)->first();
                         $getdriver    =  DB::table('driveuser')->where('id', 5)->first();
                         $searchdriver =  DB::table('search_driver')->orderBy('id', 'desc')->first();
-
                         $origin = $getpickup->pickuplat . "," . $getpickup->pickuplon;
                         $destination = $getpickup->destinationlat . "," . $getpickup->destinationlon;
                         $api = file_get_contents("https://maps.googleapis.com/maps/api/distancematrix/json?units=imperial&origins=" . $origin . "&destinations=" . $destination . "&key=" . env('GOOGLE_KEY') . "");
                         $data = json_decode($api);
-
                         $times = @$data->rows[0]->elements[0]->duration->text;
-
                         $km = $this->distance($getpickup->pickuplat, $getpickup->pickuplon, $getpickup->destinationlat, $getpickup->destinationlon, "K");
                         $distance = number_format($km, 0, '', '');
                         /*distance by google api*/
                         $tasks_controller = new PushNotificationCommonController;
                         $distance = $tasks_controller->multipleStopDistance($getpickup->id);
-
                         $kmfare = @$getvehicle->kmfare;
                         $basefare = $getvehicle->basefare;
                         $vehicle_type = $getvehicle->vehicle_type;
                         $totalprice = $distance * $kmfare + $basefare;
-
                         if ($getpickup->tip != '') {
                             $tip = $getpickup->tip;
                         } else {
                             $tip = '0';
                         }
                         $totalPrice = $getpickup->finalprice;
-
                         $services = DB::table('durapickup_services as ds')
                             ->join('pricecard as pc', 'ds.service_id', '=', 'pc.id')
                             ->where('ds.pickup_id', $ispresent->id)
@@ -377,13 +353,13 @@ class OrdersController extends Controller
                         }
 
                         $stopcount = DB::table('pickup_stoplocation')->where('pickup_id', $ispresent->id)->count();
-                        //echo $stopget;die;
+                        //echo $stopcount;die;
                         if ($stopcount > 0) {
-                            $stopget = DB::table('pickup_stoplocation')->where('pickup_id', $getpickup->id)->get();
+                            $stopget = DB::table('pickup_stoplocation')->where('pickup_id', $ispresent->id)->get();
                             $stoplocation = array();
                             $stoplocations = '';
                             foreach ($stopget as $getstop) {
-                                $stoplocation[]     = array(
+                                $stoplocation[] = array(
                                     'stop_address1' => $getstop->stop_address1,
                                     'stop_address2' => $getstop->stop_address2,
                                     'stop_name'     => $getstop->stop_name,
@@ -394,10 +370,32 @@ class OrdersController extends Controller
                                 $location = "/" . $getstop->stoplat . "," . $getstop->stoplon;
                                 $stoplocations .= $location;
                             }
-                            $driverlocationlink = 'https://www.google.com/maps/dir/' . $origin . $stoplocations . '/' . $destination;
+                            $driverlocationlink = 'https://www.google.com/maps/dir/' . $origin . '/' . $getstop->stoplat . ',' . $getstop->stoplon . $stoplocations . '/' . $destination;
+                            $map = "https://maps.googleapis.com/maps/api/distancematrix/json?units=imperial&origins=" . $origin . "|" . $getstop->stoplat . ',' . $getstop->stoplon . "&destinations=" . $destination . "&key=" . env('GOOGLE_KEY') . "";
+                            $api = file_get_contents($map);
+                            $data = json_decode($api);
                         } else {
                             $driverlocationlink = 'https://www.google.com/maps/dir/' . $origin . '/' . $destination;
+                            $map = "https://maps.googleapis.com/maps/api/distancematrix/json?units=imperial&origins=" . $origin . "&destinations=" . $destination . "&key=" . env('GOOGLE_KEY') . "";
+                            $api = file_get_contents($map);
+                            $data = json_decode($api);
                         }
+                        // $arrayData = json_decode(json_encode($data), true);
+                        // $arrayData = @$api;
+                        // echo "<pre>";
+                        // print_r($arrayData['destination_addresses']);
+                        // die;
+                        // foreach($arrayData as $data){
+                        //     echo "<pre>";
+                        //     print_r($data);
+                        // }
+                        //echo $map;
+                        // // echo "<pre>";
+                        // // print_r($data);
+                        //die;
+
+
+
                         $finalData[]  = array(
                             'servicetype'       => 'Dura Express',
                             'pickup_id'         => $getpickup->id,
@@ -433,16 +431,21 @@ class OrdersController extends Controller
                             'orderdate'         => date('F jS Y \a\t h:i:s A', strtotime($getpickup->pdate)),
                             'coupon'            => @$coupon,
                             'stopdata'          => @$stoplocation,
-                            'driverlocationlink' => 'https://www.google.com/maps/dir/' . $origin . '/' . $destination,
+                            'driverlocationlink' => $driverlocationlink,
                         );
                     }
+
+                    // echo "<pre>";
+                    // print_r($finalData);
+                    // die;
                     return response()->json(['status' => 200, 'message' => 'Success', 'data' => $finalData], 200);
                 } else {
 
                     return response()->json(['status' => 201, 'message' => 'No Data found', 'data' => ""], 201);
                 }
             } catch (\Exception $e) {
-                return response()->json(['message' => $e->getMessage()], 500);
+                dd($e);
+                // return response()->json(['message' => $e], 500);
             }
         }
     }

@@ -17,6 +17,7 @@ use QRCode;
 
 class DriverManagementController extends Controller
 {
+
     public function sendOTP(Request $request)
     {
         $rules = [
@@ -25,6 +26,7 @@ class DriverManagementController extends Controller
             'message' => 'required',
             'otp' => 'required',
         ];
+
         $validator = Validator::make($request->all(), $rules);
         if ($validator->fails()) {
             return response()->json(['status' => 422,  'message' => $validator->messages()], 200);
@@ -193,7 +195,11 @@ class DriverManagementController extends Controller
                     $referralcode           = $tasks_controller->generateReferalCodeDriver();
                     /* QR Code Generate start*/
                     require base_path('public/phpqrcode/qrlib.php');
+                    //include('phpqrcode/qrlib.php');
+
                     $tempDir = base_path('public/Media/QRCode/');
+
+
                     $codeContents = $codeContents = $request->input('country_code') . $request->input('mobile');
                     $fileName = $request->input('mobile') . md5($codeContents) . '.png';
                     $pngAbsoluteFilePath = $tempDir . $fileName;
@@ -260,6 +266,11 @@ class DriverManagementController extends Controller
                     );
                     $driverWallet = DB::table('driver_wallet')->insert($walletData);
                     $addDatadoc = DB::table('drivepersonaldoc')->insertGetId($docdata);
+                    // $driverData = DB::table('driveuser')->where('id', $driver_id)->first();
+
+                    // $driverDoc = DB::table('drivepersonaldoc')->where('driver_id', $driver_id)->first();
+                    // $driverWallet = DB::table('driver_wallet')->where('driver_id', $driver_id)->first();
+
 
                     $driverData = DB::table('driveuser')->where('id', $driver_id)->first();
                     if ($driverData->profilephoto_url != "") {
@@ -272,6 +283,7 @@ class DriverManagementController extends Controller
                     } else {
                         $driverData->qr_code =  $driverData->qr_code;
                     }
+
                     $driverDoc = DB::table('drivepersonaldoc')->where('driver_id',  $driver_id)->first();
                     if ($driverDoc->crno_image != '') {
                         $driverDoc->crno_image = URL::to('/') . "/public/Media/" . $driverDoc->crno_image;
@@ -313,6 +325,7 @@ class DriverManagementController extends Controller
                         'driverDoc'          => $driverDoc,
                         'driverWallet'       => $driverWallet,
                         'token'              => $this->respondWithToken($token),
+
                     );
                     $data = collect(["status" => 200, "message" => "Driver registration sucessfully", "data" => $finalData]);
                     //$data = collect(["status" => 200, "status" => "Success", "data" => $driverData]);
@@ -443,7 +456,10 @@ class DriverManagementController extends Controller
                         'created_at' => date('Y-m-d H:i:s'),
                         'updated_at' => date('Y-m-d H:i:s'),
                     );
+
                     $addDatadoc = DB::table('drivepersonaldoc')->where('driver_id', $request->driver_id)->update($docdata);
+
+
                     $driverData = DB::table('driveuser')->where('id', $request->driver_id)->first();
                     if ($driverData->profilephoto_url != "") {
                         $driverData->profilephoto_url = URL::to('/') . "/public/Media/" . $driverData->profilephoto_url;
@@ -455,6 +471,7 @@ class DriverManagementController extends Controller
                     } else {
                         $driverData->qr_code =  $driverData->qr_code;
                     }
+
                     $driverDoc = DB::table('drivepersonaldoc')->where('driver_id',  $request->driver_id)->first();
                     if ($driverDoc->crno_image != '') {
                         $driverDoc->crno_image = URL::to('/') . "/public/Media/" . $driverDoc->crno_image;
@@ -525,6 +542,7 @@ class DriverManagementController extends Controller
                 } else {
                     $driverData->qr_code =  $driverData->qr_code;
                 }
+
                 $driverDoc = DB::table('drivepersonaldoc')->where('driver_id',  $request->driver_id)->first();
                 if ($driverDoc->crno_image != '') {
                     $driverDoc->crno_image = URL::to('/') . "/public/Media/" . $driverDoc->crno_image;
@@ -557,6 +575,9 @@ class DriverManagementController extends Controller
                     $driverDoc->police_clearance_image =  $driverDoc->police_clearance_image;
                 }
                 $driverWallet = DB::table('driver_wallet')->where('driver_id', $request->driver_id)->first();
+                // echo "<pre>";
+                // print_r($driverData); 
+                // die;
                 $finalData = array(
                     'driverData'         => $driverData,
                     'driverDoc'          => $driverDoc,
@@ -593,6 +614,7 @@ class DriverManagementController extends Controller
                     } else {
                         $driverData->qr_code =  $driverData->qr_code;
                     }
+
                     $driverDoc = DB::table('drivepersonaldoc')->where('driver_id',  $request->driver_id)->first();
                     if ($driverDoc->crno_image != '') {
                         $driverDoc->crno_image = URL::to('/') . "/public/Media/" . $driverDoc->crno_image;
@@ -938,6 +960,7 @@ class DriverManagementController extends Controller
     }
     public function driverServiceArea(Request $request)
     {
+
         $rules = [
             'country_code' => 'required',
         ];
@@ -1168,17 +1191,17 @@ class DriverManagementController extends Controller
                         $back_licenseImage = '';
                     }
                     $drivepersonaldocData = DB::table('drivepersonaldoc')->where('driver_id', $request->driver_id)->update([
-                        'licence_no' => $request->has('license_no') ? $request->license_no : "",
+                        'licence_no'        => $request->has('license_no') ? $request->license_no : "",
                         'frontlicensephoto' => $front_licenseImage,
-                        'backlicensephoto' => $back_licenseImage,
-                        'updated_at' => date("Y-m-d H:i:s"),
+                        'backlicensephoto'  => $back_licenseImage,
+                        'updated_at'        => date("Y-m-d H:i:s"),
                     ]);
-
-                    $drivepersonaldocData = DB::table('driveuser')->where('id', $request->driver_id)->update([
-                        'latitude' => $request->has('latitude') ? $request->latitude : "",
-                        'longitude' => $request->has('longitude') ? $request->longitude : "",
-                        'updated_at' => date("Y-m-d H:i:s"),
-                    ]);
+                    $drivepersonaldocData = DB::table('driveuser')
+                        ->where('id', $request->driver_id)->update([
+                            'latitude'      => $request->has('latitude') ? $request->latitude : "",
+                            'longitude'     => $request->has('longitude') ? $request->longitude : "",
+                            'updated_at'    => date("Y-m-d H:i:s"),
+                        ]);
 
                     $driverData = DB::table('driveuser')->where('id', $request->driver_id)->first();
                     if ($driverData->profilephoto_url != "") {
@@ -1598,6 +1621,268 @@ class DriverManagementController extends Controller
 
 
                     $data = collect(["status" => 200, "message" => "Data found sucessfully", "data" => $combineData]);
+                    return response()->json($data, 200);
+                } else {
+                    return response()->json(['status' => 422, 'message' => "Driver not found", "data" => null], 409);
+                }
+            } catch (\Exception $e) {
+                return response()->json(['status' => 422, 'message' => $e->getMessage()], 409);
+            }
+        }
+    }
+
+    public function driverPersonalInfoUpload(Request $request)
+    {
+        $rules = [
+            'driver_id' => 'required',
+            'latitude' => 'required',
+            'longitude' => 'required',
+        ];
+        $validator = Validator::make($request->all(), $rules);
+        if ($validator->fails()) {
+            return response()->json(['status' => 422, 'message' => $validator->messages()], 200);
+        } else {
+            try {
+                $driverData = DB::table('driveuser')->where('id', $request->driver_id)->first();
+                if ($driverData) {
+                    $driverPersonalInfoData = DB::table('driveuser')
+                        ->where('id', $request->driver_id)->update([
+                            'firstname'     => $request->has('firstname') ? $request->firstname : "",
+                            'middlename'    => $request->has('middlename') ? $request->middlename : "",
+                            'lastname'      => $request->has('lastname') ? $request->lastname : "",
+                            'manger_id'     => $request->has('manger_id') ? $request->manger_id : "",
+                            'dob'           => $request->has('dob') ? $request->dob : "",
+                            //'referralcode'  => $request->has('referralcode') ? $request->referralcode : "",
+                            'latitude'      => $request->has('latitude') ? $request->latitude : "",
+                            'longitude'     => $request->has('longitude') ? $request->longitude : "",
+                            'updated_at'    => date("Y-m-d H:i:s"),
+                        ]);
+
+                    $driverData = DB::table('driveuser')->where('id', $request->driver_id)->first();
+                    if ($driverData->profilephoto_url != "") {
+                        $driverData->profilephoto_url = URL::to('/') . "/public/Media/" . $driverData->profilephoto_url;
+                    } else {
+                        $driverData->profilephoto_url = $driverData->profilephoto_url;
+                    }
+                    if ($driverData->qr_code != '') {
+                        $driverData->qr_code = URL::to('/') . "/public/Media/QRCode/" . $driverData->qr_code;
+                    } else {
+                        $driverData->qr_code =  $driverData->qr_code;
+                    }
+
+                    $driverDoc = DB::table('drivepersonaldoc')->where('driver_id', $request->driver_id)->first();
+                    if ($driverDoc->crno_image != '') {
+                        $driverDoc->crno_image = URL::to('/') . "/public/Media/" . $driverDoc->crno_image;
+                    } else {
+                        $driverDoc->crno_image = $driverDoc->crno_image;
+                    }
+                    if ($driverDoc->frontlicensephoto != '') {
+                        $driverDoc->frontlicensephoto = URL::to('/') . "/public/Media/" . $driverDoc->frontlicensephoto;
+                    } else {
+                        $driverDoc->frontlicensephoto = $driverDoc->frontlicensephoto;
+                    }
+                    if ($driverDoc->backlicensephoto != '') {
+                        $driverDoc->backlicensephoto = URL::to('/') . "/public/Media/" . $driverDoc->backlicensephoto;
+                    } else {
+                        $driverDoc->backlicensephoto = $driverDoc->backlicensephoto;
+                    }
+                    if ($driverDoc->police_clearance_image != '') {
+                        $driverDoc->police_clearance_image = URL::to('/') . "/public/Media/" . $driverDoc->police_clearance_image;
+                    } else {
+                        $driverDoc->police_clearance_image = $driverDoc->police_clearance_image;
+                    }
+                    if ($driverDoc->vehiclephoto != '') {
+                        $driverDoc->vehiclephoto = URL::to('/') . "/public/Media/" . $driverDoc->vehiclephoto;
+                    } else {
+                        $driverDoc->vehiclephoto =  $driverDoc->vehiclephoto;
+                    }
+                    if ($driverDoc->police_clearance_image != '') {
+                        $driverDoc->police_clearance_image = URL::to('/') . "/public/Media/" . $driverDoc->police_clearance_image;
+                    } else {
+                        $driverDoc->police_clearance_image =  $driverDoc->police_clearance_image;
+                    }
+                    $driverWallet = DB::table('driver_wallet')->where('driver_id', $request->driver_id)->first();
+                    $combineData = array(
+                        'driverData'         => $driverData,
+                        'driverDoc'          => $driverDoc,
+                        'driverWallet'       => $driverWallet
+                    );
+                    $data = collect(["status" => 200, "message" => "Updated sucessfully", "data" => $combineData]);
+                    return response()->json($data, 200);
+                } else {
+                    return response()->json(['status' => 422, 'message' => "Driver not found", "data" => null], 409);
+                }
+            } catch (\Exception $e) {
+                return response()->json(['status' => 422, 'message' => $e->getMessage()], 409);
+            }
+        }
+    }
+
+
+    public function driverGCashdetailUpload(Request $request)
+    {
+        $rules = [
+            'driver_id' => 'required',
+            'latitude' => 'required',
+            'longitude' => 'required',
+        ];
+        $validator = Validator::make($request->all(), $rules);
+        if ($validator->fails()) {
+            return response()->json(['status' => 422, 'message' => $validator->messages()], 200);
+        } else {
+            try {
+                $driverData = DB::table('driveuser')->where('id', $request->driver_id)->first();
+                if ($driverData) {
+                    if ($file = $request->file('profilephoto_url')) {
+                        $destinationPath = base_path('public/Media/');
+                        $profilephoto_url = uniqid('file') . "-" . $file->getClientOriginalName();
+                        $path = $file->move($destinationPath, $profilephoto_url);
+                    } else {
+                        $profilephoto_url = $driverData->profilephoto_url;
+                    }
+                    $driverPersonalInfoData = DB::table('driveuser')
+                        ->where('id', $request->driver_id)->update([
+                            'profilephoto_url'     => $profilephoto_url,
+                            'g_cash_no'    => $request->has('g_cash_no') ? $request->g_cash_no : "",
+                            'g_cash_accont_name'      => $request->has('g_cash_accont_name') ? $request->g_cash_accont_name : "",
+                            'latitude'      => $request->has('latitude') ? $request->latitude : "",
+                            'longitude'     => $request->has('longitude') ? $request->longitude : "",
+                            'updated_at'    => date("Y-m-d H:i:s"),
+                        ]);
+
+                    $driverData = DB::table('driveuser')->where('id', $request->driver_id)->first();
+                    if ($driverData->profilephoto_url != "") {
+                        $driverData->profilephoto_url = URL::to('/') . "/public/Media/" . $driverData->profilephoto_url;
+                    } else {
+                        $driverData->profilephoto_url = $driverData->profilephoto_url;
+                    }
+                    if ($driverData->qr_code != '') {
+                        $driverData->qr_code = URL::to('/') . "/public/Media/QRCode/" . $driverData->qr_code;
+                    } else {
+                        $driverData->qr_code =  $driverData->qr_code;
+                    }
+
+                    $driverDoc = DB::table('drivepersonaldoc')->where('driver_id', $request->driver_id)->first();
+                    if ($driverDoc->crno_image != '') {
+                        $driverDoc->crno_image = URL::to('/') . "/public/Media/" . $driverDoc->crno_image;
+                    } else {
+                        $driverDoc->crno_image = $driverDoc->crno_image;
+                    }
+                    if ($driverDoc->frontlicensephoto != '') {
+                        $driverDoc->frontlicensephoto = URL::to('/') . "/public/Media/" . $driverDoc->frontlicensephoto;
+                    } else {
+                        $driverDoc->frontlicensephoto = $driverDoc->frontlicensephoto;
+                    }
+                    if ($driverDoc->backlicensephoto != '') {
+                        $driverDoc->backlicensephoto = URL::to('/') . "/public/Media/" . $driverDoc->backlicensephoto;
+                    } else {
+                        $driverDoc->backlicensephoto = $driverDoc->backlicensephoto;
+                    }
+                    if ($driverDoc->police_clearance_image != '') {
+                        $driverDoc->police_clearance_image = URL::to('/') . "/public/Media/" . $driverDoc->police_clearance_image;
+                    } else {
+                        $driverDoc->police_clearance_image = $driverDoc->police_clearance_image;
+                    }
+                    if ($driverDoc->vehiclephoto != '') {
+                        $driverDoc->vehiclephoto = URL::to('/') . "/public/Media/" . $driverDoc->vehiclephoto;
+                    } else {
+                        $driverDoc->vehiclephoto =  $driverDoc->vehiclephoto;
+                    }
+                    if ($driverDoc->police_clearance_image != '') {
+                        $driverDoc->police_clearance_image = URL::to('/') . "/public/Media/" . $driverDoc->police_clearance_image;
+                    } else {
+                        $driverDoc->police_clearance_image =  $driverDoc->police_clearance_image;
+                    }
+                    $driverWallet = DB::table('driver_wallet')->where('driver_id', $request->driver_id)->first();
+                    $combineData = array(
+                        'driverData'         => $driverData,
+                        'driverDoc'          => $driverDoc,
+                        'driverWallet'       => $driverWallet
+                    );
+                    $data = collect(["status" => 200, "message" => "Updated sucessfully", "data" => $combineData]);
+                    return response()->json($data, 200);
+                } else {
+                    return response()->json(['status' => 422, 'message' => "Driver not found", "data" => null], 409);
+                }
+            } catch (\Exception $e) {
+                return response()->json(['status' => 422, 'message' => $e->getMessage()], 409);
+            }
+        }
+    }
+
+    public function driverDurabagIDUpload(Request $request)
+    {
+        $rules = [
+            'driver_id' => 'required',
+            'latitude' => 'required',
+            'longitude' => 'required',
+        ];
+        $validator = Validator::make($request->all(), $rules);
+        if ($validator->fails()) {
+            return response()->json(['status' => 422, 'message' => $validator->messages()], 200);
+        } else {
+            try {
+                $driverData = DB::table('driveuser')->where('id', $request->driver_id)->first();
+                if ($driverData) {
+
+                    $driverPersonalInfoData = DB::table('driveuser')
+                        ->where('id', $request->driver_id)->update([
+                            'dura_bag_id'    => $request->has('dura_bag_id') ? $request->dura_bag_id : "",
+                            'latitude'      => $request->has('latitude') ? $request->latitude : "",
+                            'longitude'     => $request->has('longitude') ? $request->longitude : "",
+                            'updated_at'    => date("Y-m-d H:i:s"),
+                        ]);
+
+                    $driverData = DB::table('driveuser')->where('id', $request->driver_id)->first();
+                    if ($driverData->profilephoto_url != "") {
+                        $driverData->profilephoto_url = URL::to('/') . "/public/Media/" . $driverData->profilephoto_url;
+                    } else {
+                        $driverData->profilephoto_url = $driverData->profilephoto_url;
+                    }
+                    if ($driverData->qr_code != '') {
+                        $driverData->qr_code = URL::to('/') . "/public/Media/QRCode/" . $driverData->qr_code;
+                    } else {
+                        $driverData->qr_code =  $driverData->qr_code;
+                    }
+
+                    $driverDoc = DB::table('drivepersonaldoc')->where('driver_id', $request->driver_id)->first();
+                    if ($driverDoc->crno_image != '') {
+                        $driverDoc->crno_image = URL::to('/') . "/public/Media/" . $driverDoc->crno_image;
+                    } else {
+                        $driverDoc->crno_image = $driverDoc->crno_image;
+                    }
+                    if ($driverDoc->frontlicensephoto != '') {
+                        $driverDoc->frontlicensephoto = URL::to('/') . "/public/Media/" . $driverDoc->frontlicensephoto;
+                    } else {
+                        $driverDoc->frontlicensephoto = $driverDoc->frontlicensephoto;
+                    }
+                    if ($driverDoc->backlicensephoto != '') {
+                        $driverDoc->backlicensephoto = URL::to('/') . "/public/Media/" . $driverDoc->backlicensephoto;
+                    } else {
+                        $driverDoc->backlicensephoto = $driverDoc->backlicensephoto;
+                    }
+                    if ($driverDoc->police_clearance_image != '') {
+                        $driverDoc->police_clearance_image = URL::to('/') . "/public/Media/" . $driverDoc->police_clearance_image;
+                    } else {
+                        $driverDoc->police_clearance_image = $driverDoc->police_clearance_image;
+                    }
+                    if ($driverDoc->vehiclephoto != '') {
+                        $driverDoc->vehiclephoto = URL::to('/') . "/public/Media/" . $driverDoc->vehiclephoto;
+                    } else {
+                        $driverDoc->vehiclephoto =  $driverDoc->vehiclephoto;
+                    }
+                    if ($driverDoc->police_clearance_image != '') {
+                        $driverDoc->police_clearance_image = URL::to('/') . "/public/Media/" . $driverDoc->police_clearance_image;
+                    } else {
+                        $driverDoc->police_clearance_image =  $driverDoc->police_clearance_image;
+                    }
+                    $driverWallet = DB::table('driver_wallet')->where('driver_id', $request->driver_id)->first();
+                    $combineData = array(
+                        'driverData'         => $driverData,
+                        'driverDoc'          => $driverDoc,
+                        'driverWallet'       => $driverWallet
+                    );
+                    $data = collect(["status" => 200, "message" => "Updated sucessfully", "data" => $combineData]);
                     return response()->json($data, 200);
                 } else {
                     return response()->json(['status' => 422, 'message' => "Driver not found", "data" => null], 409);

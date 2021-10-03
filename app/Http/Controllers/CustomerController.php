@@ -21,14 +21,15 @@ class CustomerController extends Controller
 
         if ($validator->fails()) {
             return response()->json(['StatusCode' => 422,'Status' => 'Failed','message'=>$validator->messages() ], 200);
-        } 
-        else 
+        } else 
         {
-            try 
-            {
-                $addData = DB::table('customer')->insertGetId($request->all());
-                $data = collect(["status" => "100", "message" => "Success", "data" => $addData]);
-                return response()->json($data, 200);
+               try 
+                {
+                     $addData = DB::table('customer')->insertGetId($request->all()); 
+        
+                    $data = collect(["status" => "100", "message" => "Success", "data" => $addData]);
+                    return response()->json($data, 200);
+    
             } catch (\Exception $e) {
                 return response()->json(['message' => $e], 409);
             }

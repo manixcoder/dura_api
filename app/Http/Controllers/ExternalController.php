@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Hash;
 use  App\User;
 use URL;
-use DB;k7 
+use DB;
 
 class ExternalController extends Controller
 {
@@ -99,7 +99,7 @@ class ExternalController extends Controller
                 {
                     $data = collect(["status" => "200", "message" => "Code matched successfully.!" , "data" => $user]);
                 }   else{
-                    $data = collect(["status" => "200", "message" => "Code Not matched.!" , "data" =>null]);      
+                    $data = collect(["status" => "200", "message" => "Code Not matched.!" , "data" =>null]);
                 }
                 
                 return response()->json($data, 200);

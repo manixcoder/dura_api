@@ -34,6 +34,9 @@ $router->group(['prefix' => 'api'], function () use ($router) {
     $router->post('driverClearanceUpload','DriverManagementController@driverClearanceUpload');
     $router->post('driverVehicleUpload','DriverManagementController@driverVehicleUpload');
     $router->post('driverProfilePicUpload','DriverManagementController@driverProfilePicUpload');
+    $router->post('driverPersonalInfoUpload','DriverManagementController@driverPersonalInfoUpload');
+    $router->post('driverGCashdetailUpload','DriverManagementController@driverGCashdetailUpload');
+    $router->post('driverDurabagIDUpload','DriverManagementController@driverDurabagIDUpload');
     
     
     

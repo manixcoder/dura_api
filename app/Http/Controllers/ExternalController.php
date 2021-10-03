@@ -136,5 +136,3 @@ class ExternalController extends Controller
         }
         
 }
-
-?>

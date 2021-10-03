@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
@@ -16,82 +17,66 @@ class AuthController extends Controller
     }
     public function register(Request $request)
     {
-        if($request->login_type=='google') 
-        {
+        if ($request->login_type == 'google') {
             $this->validate($request, [
                 'email' => 'required|email',
                 'login_type' => 'required',
                 'google_id' => 'required',
-                'country_id'=>'required',
+                'country_id' => 'required',
             ]);
-        } 
-        else if($request->login_type=='facebook')
-        {
+        } else if ($request->login_type == 'facebook') {
             $this->validate($request, [
                 'email' => 'required|email',
                 'login_type' => 'required',
                 'facebook_id' => 'required',
-                'country_id'=>'required',
+                'country_id' => 'required',
             ]);
-        }
-        else
-        {
+        } else {
             $this->validate($request, [
                 'email' => 'required|email',
                 'password' => 'nullable|required_with:password_confirmation|string|confirmed',
                 'password_confirmation' => 'required',
             ]);
-            
         }
-        try 
-        {  
+        try {
             $user = User::where('email', $request->email)->first();
-            if(isset($request->phone) && $request->phone!="" && $request->login_type == 'normal')
-            {
+            if (isset($request->phone) && $request->phone != "" && $request->login_type == 'normal') {
                 $chck_phone = User::where('phone', $request->phone)->first();
-                if($chck_phone!=null)
-                {
+                if ($chck_phone != null) {
                     return response()->json(['message' => 'PhoneNo already registered', 'status' => 404], 201);
-                }    
+                }
             }
-            if($user!=null)
-            {
-                if($request->login_type!='normal'){
-                    $credentials = array('email'=>$request->email,'password'=>$request->email);
+            if ($user != null) {
+                if ($request->login_type != 'normal') {
+                    $credentials = array('email' => $request->email, 'password' => $request->email);
                     $usertype = User::where('email', $request->email)->first();
-                    if(empty($usertype))
-                    {
+                    if (empty($usertype)) {
                         return response()->json(['message' => 'Invalid credentials', 'status' => 201], 401);
-                    }
-                    else
-                    {
+                    } else {
                         //$token = Auth::loginUsingId($usertype['id']);
                         $user = User::find($usertype['id']);
-                        $token=Auth::fromUser($user);
+                        $token = Auth::fromUser($user);
                         $finalData = array();
                         $usertype = User::where('email', $request->email)->first();
-                        $finalData = array('token'=>$this->respondWithToken($token));
+                        $finalData = array('token' => $this->respondWithToken($token));
                         $data = collect([
-                            "status" =>200, 
+                            "status" => 200,
                             "message" => "Success",
-                            'user_id'       =>$usertype['id'],
-                            'first_name'    =>$usertype['first_name'],
-                            'last_name'     =>$usertype['last_name'],
-                            'email'         =>$usertype['email'],
-                            'phone'         =>$usertype['phone'],
-                            'profile_image' =>URL::to('/')."/public/Media/".$usertype['profile_image'],
-                            "data"          =>$this->respondWithToken($token)
-                            ]);
-                        return response()->json($data, 200); 
+                            'user_id'       => $usertype['id'],
+                            'first_name'    => $usertype['first_name'],
+                            'last_name'     => $usertype['last_name'],
+                            'email'         => $usertype['email'],
+                            'phone'         => $usertype['phone'],
+                            'profile_image' => URL::to('/') . "/public/Media/" . $usertype['profile_image'],
+                            "data"          => $this->respondWithToken($token)
+                        ]);
+                        return response()->json($data, 200);
                     }
-                }
-                else
-                {
+                } else {
                     return response()->json(['message' => 'User already registered', 'status' => 404], 200);
                 }
             }
-            if($file = $request->file('file')) 
-            {
+            if ($file = $request->file('file')) {
                 $destinationPath = base_path('public/Media/');
                 $profileImage = uniqid('file') . "-" . $file->getClientOriginalName();
                 $path = $file->move($destinationPath, $profileImage);
@@ -100,153 +85,126 @@ class AuthController extends Controller
             }
             // $tasks_controller = new PushNotificationCommonController;
             // $referalCode = $tasks_controller->generateReferalCode();
-            $user = new User;
+            $user                = new User;
             $user->first_name    = @$request->input('first_name');
             $user->last_name     = @$request->input('last_name');
             $user->area          = @$request->input('area');
             $user->country_code  = @$request->input('country_code');
             $user->phone         = @$request->input('phone');
             $user->email         = @$request->input('email');
-            $user->country_id         = @$request->input('country_id');
+            $user->country_id    = @$request->input('country_id');
             $user->referral_code = @$request->input('referral_code');
             $user->login_type    = @$request->input('login_type');
             $user->profile_image = @$profileImage;
-            $user->referral_by      ='';
+            $user->referral_by   = '';
             $user->status        = 1;
             $plainPassword       = $request->input('password');
-            if($request->login_type=='google'){
+            if ($request->login_type == 'google') {
                 $user->google_id    = $request->input('google_id');
                 $plainPassword = '12345678';
             }
-            if($request->login_type=='facebook'){
+            if ($request->login_type == 'facebook') {
                 $user->facebook_id  = $request->input('facebook_id');
                 $plainPassword = '12345678';
             }
             $user->password      = app('hash')->make($plainPassword);
-            
             $user->save();
             $tasks_controller = new PushNotificationCommonController;
             $referalCode = $tasks_controller->generateUsersReferralCode($user->id);
             $getamount = DB::table('wallet_recharge')->insert([
-                'transactionid'=>"",
-                'transactiontype'=>'',
-                'user_id'=>$user->id,
-                'phone'=>'',
-                'method'=>'',
-                'amount'=>'0',
-                'change_amount'=>'0',
-                'description'=>'',
-                'created_at'=>date("Y-m-d H:i:s"),
-                'updated_at'=>date("Y-m-d H:i:s")
-                ]);
+                'transactionid' => "",
+                'transactiontype' => '',
+                'user_id' => $user->id,
+                'phone' => '',
+                'method' => '',
+                'amount' => '0',
+                'change_amount' => '0',
+                'description' => '',
+                'created_at' => date("Y-m-d H:i:s"),
+                'updated_at' => date("Y-m-d H:i:s")
+            ]);
             $tasks_controller = new PushNotificationCommonController;
-            $message= "You have register successfully with Duradrive at" . date("F j, Y, g:i A");
+            $message = "You have register successfully with Duradrive at" . date("F j, Y, g:i A");
             $ext = 'registration';
             $tasks_controller->postNotification($user->id, $message, $ext);
-            if($request->login_type!='normal'){
-                $credentials = array('email'=>$request->email,'password'=>'12345678');
+            if ($request->login_type != 'normal') {
+                $credentials = array('email' => $request->email, 'password' => '12345678');
                 $usertype = User::where('email', $request->email)->first();
-                if(empty($usertype))
-                {
+                if (empty($usertype)) {
                     return response()->json(['message' => 'Invalid credentials', 'status' => 201], 401);
-                }
-                else
-                {
+                } else {
                     $finalData = array();
                     $user = User::find($usertype['id']);
-                    $token=Auth::fromUser($user);
+                    $token = Auth::fromUser($user);
                     $usertype = User::where('email', $request->email)->first();
-                    $finalData = array('token'=>$this->respondWithToken($token));
+                    $finalData = array('token' => $this->respondWithToken($token));
                     $data = collect([
-                        "status" =>200, 
+                        "status" => 200,
                         "message" => "Success",
-                        'user_id'       =>$usertype['id'],
-                        'first_name'    =>$usertype['first_name'],
-                        'last_name'     =>$usertype['last_name'],
-                        'email'         =>$usertype['email'],
-                        'phone'         =>$usertype['phone'],
-                        'profile_image' =>URL::to('/')."/public/Media/".$usertype['profile_image'],
-                        "data"          =>$this->respondWithToken($token)
-                        ]);
-                        return response()->json($data, 200);
+                        'user_id'       => $usertype['id'],
+                        'first_name'    => $usertype['first_name'],
+                        'last_name'     => $usertype['last_name'],
+                        'email'         => $usertype['email'],
+                        'phone'         => $usertype['phone'],
+                        'profile_image' => URL::to('/') . "/public/Media/" . $usertype['profile_image'],
+                        "data"          => $this->respondWithToken($token)
+                    ]);
+                    return response()->json($data, 200);
                 }
-                
-            }
-            else
-            {
-                $data = collect(["status" =>200, "message" => "Success", "data" => $user]);
+            } else {
+                $data = collect(["status" => 200, "message" => "Success", "data" => $user]);
                 return response()->json($data, 200);
             }
-        }
-        catch (\Exception $e) 
-        {
+        } catch (\Exception $e) {
             return response()->json(['message' => $e->getMessage()], 500);
         }
     }
-
     public function login(Request $request)
     {
         $this->validate($request, [
             //'email' => 'required|string',
             'password' => 'required|string',
         ]);
-
-        if(!empty($request->get('phone'))){
-            
+        if (!empty($request->get('phone'))) {
             $credentials = $request->only(['phone', 'password']);
-        }
-        else
-        {
-            
+        } else {
             $credentials = $request->only(['email', 'password']);
         }
-        if (! $token = Auth::attempt($credentials)) 
-        {
+        if (!$token = Auth::attempt($credentials)) {
             return response()->json(['message' => 'Invalid credentials', 'status' => 201], 401);
-            
-        }
-        else
-        {
+        } else {
             $finalData = array();
-            if(!empty($request->get('phone')))
-            {
+            if (!empty($request->get('phone'))) {
                 $usertype = User::where('phone', $request->phone)->first();
-                if($usertype['country_code']!=$request->country_code)
-                {
+                if ($usertype['country_code'] != $request->country_code) {
                     return response()->json(['message' => 'Country code not matched', 'status' => 201], 401);
                 }
-            }
-            elseif (filter_var($request->get('email'), FILTER_VALIDATE_EMAIL)) 
-            {
+            } elseif (filter_var($request->get('email'), FILTER_VALIDATE_EMAIL)) {
                 $usertype = User::where('email', $request->email)->first();
             }
-            if ($request->country_id != $usertype['country_id']) 
-            {
+            if ($request->country_id != $usertype['country_id']) {
                 return response()->json(['message' => 'Country not matched', 'status' => 201], 401);
-                
             }
-            $finalData = array('token'=>$this->respondWithToken($token));
+            $finalData = array('token' => $this->respondWithToken($token));
             $tasks_controller = new PushNotificationCommonController;
-            $message= "You have login successfully with Duradrive at ".date("F j, Y, g:i A");
-            $ext='login';
-            $tasks_controller->postNotification($usertype['id'], $message,$ext);
+            $message = "You have login successfully with Duradrive at " . date("F j, Y, g:i A");
+            $ext = 'login';
+            $tasks_controller->postNotification($usertype['id'], $message, $ext);
             // $referalCode = $tasks_controller->generateUsersReferralCode($usertype['id']);
-            $referalCode = DB::table('users_referralcode')->where('user_id', $usertype['id'])->where('is_used','0')->first();
+            $referalCode = DB::table('users_referralcode')->where('user_id', $usertype['id'])->where('is_used', '0')->first();
             $data = collect([
-                "status" =>200,
+                "status" => 200,
                 "message" => "Success",
-                'user_id'       =>$usertype['id'],
-                'first_name'    =>$usertype['first_name'],
-                'last_name'     =>$usertype['last_name'],
-                'email'         =>$usertype['email'],
-                'phone'         =>$usertype['phone'],
-                'profile_image' =>URL::to('/')."/public/Media/".$usertype['profile_image'],
+                'user_id'       => $usertype['id'],
+                'first_name'    => $usertype['first_name'],
+                'last_name'     => $usertype['last_name'],
+                'email'         => $usertype['email'],
+                'phone'         => $usertype['phone'],
+                'profile_image' => URL::to('/') . "/public/Media/" . $usertype['profile_image'],
                 'referalCode'   => $referalCode,
-                'data'          =>$this->respondWithToken($token),
-                
-                ]);
-                return response()->json($data, 200); 
-            
+                'data'          => $this->respondWithToken($token),
+            ]);
+            return response()->json($data, 200);
         }
     }
 }

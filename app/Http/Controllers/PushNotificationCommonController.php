@@ -9,7 +9,8 @@ use Hash;
 
 class PushNotificationCommonController extends Controller
 {
-    public function postNotification($user_id, $message, $ext){
+	public function postNotification($user_id, $message, $ext)
+	{
 		DB::table('notification')->insert([
 			'user_id' => $user_id,
 			'description' => $message,
@@ -21,9 +22,10 @@ class PushNotificationCommonController extends Controller
 		]);
 		return true;
 	}
-	public function generateReferalCode(){
-	    $acceptableChars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
-	    $randomCode = "";
+	public function generateReferalCode()
+	{
+		$acceptableChars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+		$randomCode = "";
 		for ($i = 0; $i < 8; $i++) {
 			$randomCode .= substr($acceptableChars, rand(0, strlen($acceptableChars) - 1), 1);
 		}
@@ -35,9 +37,10 @@ class PushNotificationCommonController extends Controller
 			return $generateCode;
 		}
 	}
-	public function generateReferalCodeDriver(){
-	    $acceptableChars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
-	    $randomCode = "";
+	public function generateReferalCodeDriver()
+	{
+		$acceptableChars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+		$randomCode = "";
 		for ($i = 0; $i < 8; $i++) {
 			$randomCode .= substr($acceptableChars, rand(0, strlen($acceptableChars) - 1), 1);
 		}
@@ -49,7 +52,8 @@ class PushNotificationCommonController extends Controller
 			return $generateCode;
 		}
 	}
-	public function distance($lat1, $lon1, $lat2, $lon2, $unit){
+	public function distance($lat1, $lon1, $lat2, $lon2, $unit)
+	{
 		if (($lat1 == $lat2) && ($lon1 == $lon2)) {
 			return 0;
 		} else {
@@ -68,7 +72,8 @@ class PushNotificationCommonController extends Controller
 			}
 		}
 	}
-	public function getNearestDriver($lat1, $lon1, $unit){
+	public function getNearestDriver($lat1, $lon1, $unit)
+	{
 		$driverdata = DB::table('driveuser')->where('is_online', 1)->where('is_autoaccept', 1)->get();
 		foreach ($driverdata as $driver) {
 			$lat2 = $driver->latitude;
@@ -98,7 +103,8 @@ class PushNotificationCommonController extends Controller
 			}
 		}
 	}
-	public function generateUsersReferralCode($user_id){
+	public function generateUsersReferralCode($user_id)
+	{
 		$acceptableChars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 		$randomCode = "";
 		for ($i = 0; $i < 8; $i++) {
@@ -127,7 +133,8 @@ class PushNotificationCommonController extends Controller
 			return $generateCode;
 		}
 	}
-	public function multipleStopDistance($pickup_id){
+	public function multipleStopDistance($pickup_id)
+	{
 		$allLoaction = array();
 		$durapickupsheduleData = DB::table('durapickupshedule')
 			->where('id', $pickup_id)
@@ -152,16 +159,15 @@ class PushNotificationCommonController extends Controller
 					$distance = $distance + $distancevalue;
 					$dynamiclocation .= $location;
 				} else {
-					if($totalRecode-1 === $key){
+					if ($totalRecode - 1 === $key) {
 						$map = "https://maps.googleapis.com/maps/api/distancematrix/json?units=matrix&origins=" . $dynamiclocation . "&destinations=" . $location . "&key=" . env('GOOGLE_KEY') . "";
 						$api = file_get_contents($map);
 						$data = json_decode($api);
 						$distancevalue = @$data->rows[0]->elements[0]->distance->value;
 						$distance = $distance + $distancevalue;
-						$dynamiclocation='';
+						$dynamiclocation = '';
 						$dynamiclocation .= $location;
 					}
-					
 				}
 			}
 			$map = "https://maps.googleapis.com/maps/api/distancematrix/json?units=matrix&origins=" . $dynamiclocation .  "&destinations=" . $finalDestination . "&key=" . env('GOOGLE_KEY') . "";
@@ -170,7 +176,7 @@ class PushNotificationCommonController extends Controller
 			$distancevalue = @$data->rows[0]->elements[0]->distance->value;
 			$distance = $distance + $distancevalue;
 		} else {
-			
+
 			$map = "https://maps.googleapis.com/maps/api/distancematrix/json?units=matrix&origins=" . $durapickupsheduleData->pickuplat . "," . $durapickupsheduleData->pickuplon . "&destinations=" . $durapickupsheduleData->destinationlat . "," . $durapickupsheduleData->destinationlon . "&key=" . env('GOOGLE_KEY') . "";
 			$api = file_get_contents($map);
 			$data = json_decode($api);
@@ -181,8 +187,9 @@ class PushNotificationCommonController extends Controller
 		$distance = number_format($distance, 2);
 		return $distance;
 	}
-	public function multipleStopDistanceBackUp($pickup_id){
-	    $durapickupsheduleData = DB::table('durapickupshedule')
+	public function multipleStopDistanceBackUp($pickup_id)
+	{
+		$durapickupsheduleData = DB::table('durapickupshedule')
 			->where('id', $pickup_id)
 			->orderby('id', 'desc')
 			->first();
@@ -214,7 +221,8 @@ class PushNotificationCommonController extends Controller
 		$distance = number_format($distance, 2);
 		return $distance;
 	}
-	public function multipleStopDistanceTime($pickup_id){
+	public function multipleStopDistanceTime($pickup_id)
+	{
 		$allLoaction = array();
 		$durapickupsheduleData = DB::table('durapickupshedule')
 			->where('id', $pickup_id)
@@ -239,16 +247,15 @@ class PushNotificationCommonController extends Controller
 					$distance = $distance + $distancevalue;
 					$dynamiclocation .= $location;
 				} else {
-					if($totalRecode-1 === $key){
+					if ($totalRecode - 1 === $key) {
 						$map = "https://maps.googleapis.com/maps/api/distancematrix/json?units=matrix&origins=" . $dynamiclocation . "&destinations=" . $location . "&key=" . env('GOOGLE_KEY') . "";
 						$api = file_get_contents($map);
 						$data = json_decode($api);
 						$distancevalue = @$data->rows[0]->elements[0]->duration->value;
 						$distance = $distance + $distancevalue;
-						$dynamiclocation='';
+						$dynamiclocation = '';
 						$dynamiclocation .= $location;
 					}
-					
 				}
 			}
 			$map = "https://maps.googleapis.com/maps/api/distancematrix/json?units=matrix&origins=" . $dynamiclocation .  "&destinations=" . $finalDestination . "&key=" . env('GOOGLE_KEY') . "";

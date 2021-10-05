@@ -255,7 +255,6 @@ class OrdersController extends Controller
                 }
                 if ($IsPresent > 0) {
                     if ($request->page_id == '1') {
-                        //echo "Hello";die;
                         $IsPresent = DB::table('durapickupshedule')
                             ->where('user_id', $request->user_id)
                             ->where('driver_id', '!=', 0)
@@ -345,6 +344,8 @@ class OrdersController extends Controller
                             'currency'      => '₱',
                             'surcharge'     => 10
                         );
+                        $tasks_controller = new PushNotificationCommonController;
+                        $completePrice = $tasks_controller->orderPriceBreakdown($getpickup->id);
 
                         if ($getpickup->paymentmode != 'cod' && $getpickup->paymentmode != null) {
                             $paid = 'pending';
@@ -353,7 +354,6 @@ class OrdersController extends Controller
                         }
 
                         $stopcount = DB::table('pickup_stoplocation')->where('pickup_id', $ispresent->id)->count();
-                        //echo $stopcount;die;
                         if ($stopcount > 0) {
                             $stopget = DB::table('pickup_stoplocation')->where('pickup_id', $ispresent->id)->get();
                             $stoplocation = array();

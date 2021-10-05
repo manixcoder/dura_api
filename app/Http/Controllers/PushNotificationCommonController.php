@@ -274,4 +274,39 @@ class PushNotificationCommonController extends Controller
 		$distance = number_format($distance, 2);
 		return $distance;
 	}
+
+	public function orderPriceBreakdown($pickup_id)
+	{
+		$durapickupsheduleData = DB::table('durapickupshedule')
+			->where('id', $pickup_id)
+			->orderby('id', 'desc')
+			->first();
+		$distance = $this->multipleStopDistance($pickup_id);
+		//echo "<pre>";print_r($distance);die;
+		$getvehicle     =  DB::table('vehicle')->where('id', $durapickupsheduleData->vehicle_id)->where('service', 1)->first();
+		$kmprice = round($distance * $getvehicle->kmfare, 0, PHP_ROUND_HALF_UP);
+		$totalPrices = round($durapickupsheduleData->finalprice, 0, PHP_ROUND_HALF_UP);
+		if ($durapickupsheduleData->tip != '') {
+			$tip = $durapickupsheduleData->tip;
+		} else {
+			$tip = '0';
+		}
+		$services = DB::table('durapickup_services as ds')
+			->join('pricecard as pc', 'ds.service_id', '=', 'pc.id')
+			->where('ds.pickup_id', $pickup_id)
+			->select('pc.id', 'pc.services', 'pc.servicefee')
+			->get();
+		$completePrice =  array(
+			'distance'      => $distance,
+			'kmprice'       => $kmprice,
+			'basefare'      => $getvehicle->basefare,
+			'total'         => $totalPrices,
+			'tip'           => $tip,
+			'per_km'        => $getvehicle->kmfare,
+			'services'      => @$services,
+			'currency'      => '₱',
+			'surcharge'     => 10
+		);
+		return $completePrice;
+	}
 }

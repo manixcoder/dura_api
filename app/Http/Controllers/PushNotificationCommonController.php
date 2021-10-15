@@ -140,6 +140,7 @@ class PushNotificationCommonController extends Controller
 			->where('id', $pickup_id)
 			->orderby('id', 'desc')
 			->first();
+		//echo "<pre>";print_r($durapickupsheduleData->pickuplat);die;
 		$origin =  $durapickupsheduleData->pickuplat . "," . $durapickupsheduleData->pickuplon;
 		$finalDestination = $durapickupsheduleData->destinationlat . "," . $durapickupsheduleData->destinationlon;
 		$distance = 0;
@@ -282,10 +283,16 @@ class PushNotificationCommonController extends Controller
 			->orderby('id', 'desc')
 			->first();
 		$distance = $this->multipleStopDistance($pickup_id);
-		//echo "<pre>";print_r($distance);die;
+
 		$getvehicle     =  DB::table('vehicle')->where('id', $durapickupsheduleData->vehicle_id)->where('service', 1)->first();
 		$kmprice = round($distance * $getvehicle->kmfare, 0, PHP_ROUND_HALF_UP);
-		$totalPrices = round($durapickupsheduleData->finalprice, 0, PHP_ROUND_HALF_UP);
+		if ($durapickupsheduleData->coupon != '') {
+			$discount = $durapickupsheduleData->discount;
+			$totalPrices = round($durapickupsheduleData->finalprice, 0, PHP_ROUND_HALF_UP);
+		} else {
+			$totalPrices = round($durapickupsheduleData->finalprice, 0, PHP_ROUND_HALF_UP);
+		}
+
 		if ($durapickupsheduleData->tip != '') {
 			$tip = $durapickupsheduleData->tip;
 		} else {

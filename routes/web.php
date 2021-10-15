@@ -10,6 +10,9 @@ $router->get('allcountry', 'ExternalController@allcountry');
 $router->post('otpsent', 'OtpController@otpsent');
 $router->post('send_otp', 'OtpController@send_otp');
 $router->post('getdistance', 'CartController@getdistance');
+$router->get('/reset-password', function () {
+    return view('emailTemplete.password-reset');
+});
 
 
 $router->group(['prefix' => 'api'], function () use ($router) {

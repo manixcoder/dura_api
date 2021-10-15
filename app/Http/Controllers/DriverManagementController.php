@@ -960,7 +960,6 @@ class DriverManagementController extends Controller
     }
     public function driverServiceArea(Request $request)
     {
-
         $rules = [
             'country_code' => 'required',
         ];
@@ -972,10 +971,16 @@ class DriverManagementController extends Controller
                 $countryData = DB::table('country')
                     ->where('phonecode', $request->input('country_code'))
                     ->first();
-
-                $areaData = DB::table('service_area')
-                    ->where('country', $countryData->country_name)
+                if($request->input('country_code') =='63'){
+                   $areaData = DB::table('service_area')
+                    ->where('country', 'PHILIPPINES')
+                    ->get(); 
+                }else{
+                    $areaData = DB::table('service_area')
+                    ->where('country', 'INDIA')
                     ->get();
+                }
+                
 
                 $combineData = array(
                     'areaData'         => $areaData,
@@ -1733,16 +1738,16 @@ class DriverManagementController extends Controller
             try {
                 $driverData = DB::table('driveuser')->where('id', $request->driver_id)->first();
                 if ($driverData) {
-                    if ($file = $request->file('profilephoto_url')) {
-                        $destinationPath = base_path('public/Media/');
-                        $profilephoto_url = uniqid('file') . "-" . $file->getClientOriginalName();
-                        $path = $file->move($destinationPath, $profilephoto_url);
-                    } else {
-                        $profilephoto_url = $driverData->profilephoto_url;
-                    }
+                    // if ($file = $request->file('profilephoto_url')) {
+                    //     $destinationPath = base_path('public/Media/');
+                    //     $profilephoto_url = uniqid('file') . "-" . $file->getClientOriginalName();
+                    //     $path = $file->move($destinationPath, $profilephoto_url);
+                    // } else {
+                    //     $profilephoto_url = $driverData->profilephoto_url;
+                    // }
                     $driverPersonalInfoData = DB::table('driveuser')
                         ->where('id', $request->driver_id)->update([
-                            'profilephoto_url'     => $profilephoto_url,
+                           // 'profilephoto_url'     => $profilephoto_url,
                             'g_cash_no'    => $request->has('g_cash_no') ? $request->g_cash_no : "",
                             'g_cash_accont_name'      => $request->has('g_cash_accont_name') ? $request->g_cash_accont_name : "",
                             'latitude'      => $request->has('latitude') ? $request->latitude : "",
@@ -1824,7 +1829,7 @@ class DriverManagementController extends Controller
             try {
                 $driverData = DB::table('driveuser')->where('id', $request->driver_id)->first();
                 if ($driverData) {
-
+                    
                     $driverPersonalInfoData = DB::table('driveuser')
                         ->where('id', $request->driver_id)->update([
                             'dura_bag_id'    => $request->has('dura_bag_id') ? $request->dura_bag_id : "",

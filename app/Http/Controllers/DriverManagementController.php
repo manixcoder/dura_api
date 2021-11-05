@@ -238,6 +238,7 @@ class DriverManagementController extends Controller
                         'updated_at'            => date('Y-m-d H:i:s'),
                     );
                     $driver_id = DB::table('driveuser')->insertGetId($datass);
+                    
                     $docdata = array(
                         'driver_id' => $driver_id,
                         'cr_no' => $request->input('cr_no'),
@@ -266,6 +267,9 @@ class DriverManagementController extends Controller
                     );
                     $driverWallet = DB::table('driver_wallet')->insert($walletData);
                     $addDatadoc = DB::table('drivepersonaldoc')->insertGetId($docdata);
+
+                    $tasks_controller           = new PushNotificationCommonController;
+                    $referalCode                = $tasks_controller->generateUsersReferralCode($driver_id);
                     // $driverData = DB::table('driveuser')->where('id', $driver_id)->first();
 
                     // $driverDoc = DB::table('drivepersonaldoc')->where('driver_id', $driver_id)->first();
@@ -1808,6 +1812,27 @@ class DriverManagementController extends Controller
                     return response()->json($data, 200);
                 } else {
                     return response()->json(['status' => 422, 'message' => "Driver not found", "data" => null], 409);
+                }
+            } catch (\Exception $e) {
+                return response()->json(['status' => 422, 'message' => $e->getMessage()], 409);
+            }
+        }
+    }
+    public function driverAddBankDetails(Request $request)
+    {
+        $rules = [
+            'driver_id' => 'required',
+            'bank_name' => 'required',
+            'account_num' => 'required',
+        ];
+        $validator = Validator::make($request->all(), $rules);
+        if ($validator->fails()) {
+            return response()->json(['status' => 422, 'message' => $validator->messages()], 200);
+        } else {
+            try {
+                $driverData = DB::table('driveuser')->where('id', $request->driver_id)->first();
+                if ($driverData) {
+
                 }
             } catch (\Exception $e) {
                 return response()->json(['status' => 422, 'message' => $e->getMessage()], 409);

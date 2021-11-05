@@ -108,6 +108,7 @@ class AuthController extends Controller
             $user->referral_code        = @$request->input('referral_code');
             $user->login_type           = @$request->input('login_type');
             $user->profile_image        = @$profileImage;
+            $user->
             $user->referral_by          = '';
             $user->email_verified_at    = @$email_verified_at;
             $user->is_verified          = @$is_verified;

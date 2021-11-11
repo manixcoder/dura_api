@@ -77,7 +77,12 @@ class ExternalController extends Controller
                 $finalData= array();
                 foreach($country as $user)
                 {
-                    $finalData[] = array('id'=>$user->id,'iso'=>$user->iso,'country_name'=>$user->country_name,'country_code'=>$user->phonecode);
+                    $finalData[] = array(
+                        'id'=>$user->id,
+                        'iso'=>$user->iso,
+                        'country_name'=>$user->country_name,
+                        'country_code'=>$user->phonecode
+                        );
                 }
                 $data = collect(["status" => 200, "message" => "Data fetch successfully.!" , "data" => $finalData]);
                 return response()->json($data, 200);

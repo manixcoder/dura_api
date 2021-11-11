@@ -9,8 +9,7 @@ use Hash;
 
 class PushNotificationCommonController extends Controller
 {
-	public function postNotification($user_id, $message, $ext)
-	{
+    public function postNotification($user_id, $message, $ext){
 		DB::table('notification')->insert([
 			'user_id' => $user_id,
 			'description' => $message,
@@ -22,10 +21,9 @@ class PushNotificationCommonController extends Controller
 		]);
 		return true;
 	}
-	public function generateReferalCode()
-	{
-		$acceptableChars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
-		$randomCode = "";
+	public function generateReferalCode(){
+	    $acceptableChars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+	    $randomCode = "";
 		for ($i = 0; $i < 8; $i++) {
 			$randomCode .= substr($acceptableChars, rand(0, strlen($acceptableChars) - 1), 1);
 		}
@@ -37,10 +35,9 @@ class PushNotificationCommonController extends Controller
 			return $generateCode;
 		}
 	}
-	public function generateReferalCodeDriver()
-	{
-		$acceptableChars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
-		$randomCode = "";
+	public function generateReferalCodeDriver(){
+	    $acceptableChars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+	    $randomCode = "";
 		for ($i = 0; $i < 8; $i++) {
 			$randomCode .= substr($acceptableChars, rand(0, strlen($acceptableChars) - 1), 1);
 		}
@@ -52,8 +49,7 @@ class PushNotificationCommonController extends Controller
 			return $generateCode;
 		}
 	}
-	public function distance($lat1, $lon1, $lat2, $lon2, $unit)
-	{
+	public function distance($lat1, $lon1, $lat2, $lon2, $unit){
 		if (($lat1 == $lat2) && ($lon1 == $lon2)) {
 			return 0;
 		} else {
@@ -72,8 +68,7 @@ class PushNotificationCommonController extends Controller
 			}
 		}
 	}
-	public function getNearestDriver($lat1, $lon1, $unit)
-	{
+	public function getNearestDriver($lat1, $lon1, $unit){
 		$driverdata = DB::table('driveuser')->where('is_online', 1)->where('is_autoaccept', 1)->get();
 		foreach ($driverdata as $driver) {
 			$lat2 = $driver->latitude;
@@ -103,8 +98,7 @@ class PushNotificationCommonController extends Controller
 			}
 		}
 	}
-	public function generateUsersReferralCode($user_id)
-	{
+	public function generateUsersReferralCode($user_id){
 		$acceptableChars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 		$randomCode = "";
 		for ($i = 0; $i < 8; $i++) {
@@ -133,9 +127,38 @@ class PushNotificationCommonController extends Controller
 			return $generateCode;
 		}
 	}
-	public function multipleStopDistance($pickup_id)
-	{
-		$allLoaction = array();
+	
+	public function generateDriverReferralCode($driver_id){
+		$acceptableChars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+		$randomCode = "";
+		for ($i = 0; $i < 8; $i++) {
+			$randomCode .= substr($acceptableChars, rand(0, strlen($acceptableChars) - 1), 1);
+		}
+		$generateCode = $randomCode;
+		$usersReferralData = DB::table('driver_referralcode')->where('refereal_code', $generateCode)->first();
+		if ($usersReferralData > 0) {
+			return $this->generateUsersReferralCode($user_id);
+		} else {
+			$usersReferral = DB::table('driver_referralcode')->insert([
+				'driver_id'           => $driver_id,
+				'refereal_code'     => $generateCode,
+				'is_used'           => '0',
+				'valid_till'        => date('Y-m-d H:i:s', strtotime('+1 years')),
+				'used_date_at'      => '',
+				'used_by'           => '0',
+				'description'       => 'This is the auto generated referral code with 50 % discount on first ride',
+				'percent_discount'  => '50',
+				'created_at'        => date("Y-m-d H:i:s"),
+				'updated_at'        => date("Y-m-d H:i:s")
+			]);
+			$driverData = DB::table('driveuser')->where('id', $driver_id)->update([
+				'referral_code' => $generateCode
+			]);
+			return $generateCode;
+		}
+	}
+	public function multipleStopDistance($pickup_id){
+	    $allLoaction = array();
 		$durapickupsheduleData = DB::table('durapickupshedule')
 			->where('id', $pickup_id)
 			->orderby('id', 'desc')
@@ -160,15 +183,16 @@ class PushNotificationCommonController extends Controller
 					$distance = $distance + $distancevalue;
 					$dynamiclocation .= $location;
 				} else {
-					if ($totalRecode - 1 === $key) {
+					if($totalRecode-1 === $key){
 						$map = "https://maps.googleapis.com/maps/api/distancematrix/json?units=matrix&origins=" . $dynamiclocation . "&destinations=" . $location . "&key=" . env('GOOGLE_KEY') . "";
 						$api = file_get_contents($map);
 						$data = json_decode($api);
 						$distancevalue = @$data->rows[0]->elements[0]->distance->value;
 						$distance = $distance + $distancevalue;
-						$dynamiclocation = '';
+						$dynamiclocation='';
 						$dynamiclocation .= $location;
 					}
+					
 				}
 			}
 			$map = "https://maps.googleapis.com/maps/api/distancematrix/json?units=matrix&origins=" . $dynamiclocation .  "&destinations=" . $finalDestination . "&key=" . env('GOOGLE_KEY') . "";
@@ -177,7 +201,7 @@ class PushNotificationCommonController extends Controller
 			$distancevalue = @$data->rows[0]->elements[0]->distance->value;
 			$distance = $distance + $distancevalue;
 		} else {
-
+			
 			$map = "https://maps.googleapis.com/maps/api/distancematrix/json?units=matrix&origins=" . $durapickupsheduleData->pickuplat . "," . $durapickupsheduleData->pickuplon . "&destinations=" . $durapickupsheduleData->destinationlat . "," . $durapickupsheduleData->destinationlon . "&key=" . env('GOOGLE_KEY') . "";
 			$api = file_get_contents($map);
 			$data = json_decode($api);
@@ -188,9 +212,8 @@ class PushNotificationCommonController extends Controller
 		$distance = number_format($distance, 2);
 		return $distance;
 	}
-	public function multipleStopDistanceBackUp($pickup_id)
-	{
-		$durapickupsheduleData = DB::table('durapickupshedule')
+	public function multipleStopDistanceBackUp($pickup_id){
+	    $durapickupsheduleData = DB::table('durapickupshedule')
 			->where('id', $pickup_id)
 			->orderby('id', 'desc')
 			->first();
@@ -222,8 +245,7 @@ class PushNotificationCommonController extends Controller
 		$distance = number_format($distance, 2);
 		return $distance;
 	}
-	public function multipleStopDistanceTime($pickup_id)
-	{
+	public function multipleStopDistanceTime($pickup_id){
 		$allLoaction = array();
 		$durapickupsheduleData = DB::table('durapickupshedule')
 			->where('id', $pickup_id)
@@ -248,15 +270,16 @@ class PushNotificationCommonController extends Controller
 					$distance = $distance + $distancevalue;
 					$dynamiclocation .= $location;
 				} else {
-					if ($totalRecode - 1 === $key) {
+					if($totalRecode-1 === $key){
 						$map = "https://maps.googleapis.com/maps/api/distancematrix/json?units=matrix&origins=" . $dynamiclocation . "&destinations=" . $location . "&key=" . env('GOOGLE_KEY') . "";
 						$api = file_get_contents($map);
 						$data = json_decode($api);
 						$distancevalue = @$data->rows[0]->elements[0]->duration->value;
 						$distance = $distance + $distancevalue;
-						$dynamiclocation = '';
+						$dynamiclocation='';
 						$dynamiclocation .= $location;
 					}
+					
 				}
 			}
 			$map = "https://maps.googleapis.com/maps/api/distancematrix/json?units=matrix&origins=" . $dynamiclocation .  "&destinations=" . $finalDestination . "&key=" . env('GOOGLE_KEY') . "";
@@ -275,7 +298,7 @@ class PushNotificationCommonController extends Controller
 		$distance = number_format($distance, 2);
 		return $distance;
 	}
-
+	
 	public function orderPriceBreakdown($pickup_id)
 	{
 		$durapickupsheduleData = DB::table('durapickupshedule')
@@ -283,16 +306,18 @@ class PushNotificationCommonController extends Controller
 			->orderby('id', 'desc')
 			->first();
 		$distance = $this->multipleStopDistance($pickup_id);
-
+		
 		$getvehicle     =  DB::table('vehicle')->where('id', $durapickupsheduleData->vehicle_id)->where('service', 1)->first();
 		$kmprice = round($distance * $getvehicle->kmfare, 0, PHP_ROUND_HALF_UP);
-		if ($durapickupsheduleData->coupon != '') {
-			$discount = $durapickupsheduleData->discount;
-			$totalPrices = round($durapickupsheduleData->finalprice, 0, PHP_ROUND_HALF_UP);
-		} else {
-			$totalPrices = round($durapickupsheduleData->finalprice, 0, PHP_ROUND_HALF_UP);
-		}
-
+        // if($durapickupsheduleData->coupon !=''){
+        // 	$discount = $durapickupsheduleData->discount;
+        // 	$totalPrices = round($durapickupsheduleData->finalprice, 0, PHP_ROUND_HALF_UP);
+        // }else{
+        // $totalPrices = round($durapickupsheduleData->finalprice, 0, PHP_ROUND_HALF_UP);
+        // }
+		$totalPrices = round($durapickupsheduleData->finalprice, 0, PHP_ROUND_HALF_UP);
+		$totalWithoutDiscounted = round($durapickupsheduleData->price, 0, PHP_ROUND_HALF_UP);
+		
 		if ($durapickupsheduleData->tip != '') {
 			$tip = $durapickupsheduleData->tip;
 		} else {
@@ -304,16 +329,58 @@ class PushNotificationCommonController extends Controller
 			->select('pc.id', 'pc.services', 'pc.servicefee')
 			->get();
 		$completePrice =  array(
-			'distance'      => $distance,
-			'kmprice'       => $kmprice,
-			'basefare'      => $getvehicle->basefare,
-			'total'         => $totalPrices,
-			'tip'           => $tip,
-			'per_km'        => $getvehicle->kmfare,
-			'services'      => @$services,
-			'currency'      => '₱',
-			'surcharge'     => 10
+			'distance'              => $distance,
+			'totalWithoutDiscounted'=> $totalWithoutDiscounted ,
+			'totalWithDiscounted'   => $totalPrices - $tip,
+			'kmprice'               => $kmprice,
+			'basefare'              => $getvehicle->basefare,
+			'total'                 => $totalPrices,
+			'tip'                   => $tip,
+			'per_km'                => $getvehicle->kmfare,
+			'services'              => @$services,
+			'currency'              => '₱',
+			'surcharge'             => 10
 		);
 		return $completePrice;
 	}
+	
+	 public function send_notification($registatoin_ids, $message)
+		{
+		    //echo $apiKey =env('API_KEY');die;
+		    $apiKey = "AAAAeB_dZhA:APA91bELAbNrF4c8U7ZQCN2AjOPxMUSCIsAk_OVjafBFXN4hERtN6sDu66KA2lyAEAlhWA_fjHagwgnqQUUEl40BB6vdYdpFqBhvBs-AkN9KjW-7h8GXxAv5MKbZaFYHSI6HUu3WxzUp";
+		    //$url = 'https://android.googleapis.com/gcm/send';
+		    $url = 'https://fcm.googleapis.com/fcm/send';
+		    $fields = array(
+		        'registration_ids' => array($registatoin_ids),
+		        'data' => $message,
+		    );
+		  //  echo "<pre>";
+		  //  print_r( $fields);
+		  //  die;
+		    //$headers = array("Content-Type:" . "application/json","Authorization:" . "key=" . $apiKey);
+		    $headers = array(
+		        'Authorization: key=' . $apiKey,'Content-Type: application/json');
+		    // Open connection
+		    $ch = curl_init();
+		    // Set the url, number of POST vars, POST data
+		    curl_setopt($ch, CURLOPT_URL, $url);
+		    curl_setopt($ch, CURLOPT_POST, true);
+		    curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+		    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+		    // Disabling SSL Certificate support temporarly
+		    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+		    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($fields));
+		    // Execute post
+		    $result = curl_exec($ch);
+		    if ($result === FALSE)
+		    {
+		        die('Curl failed: ' . curl_error($ch));
+			}
+			// Close connection
+			curl_close($ch);
+			//return true;
+			return  $result;
+			echo $result;
+			die;
+		}
 }

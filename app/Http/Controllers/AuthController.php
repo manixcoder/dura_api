@@ -56,7 +56,7 @@ class AuthController extends Controller
                     $credentials = array('email' => $request->email, 'password' => $request->email);
                     $usertype = User::where('email', $request->email)->first();
                     if (empty($usertype)) {
-                        return response()->json(['message' => 'Invalid credentials', 'status' => 201], 401);
+                        return response()->json(['message' => 'This Email is already used', 'status' => 201], 401);
                     } else {
                         //$token = Auth::loginUsingId($usertype['id']);
                         $user = User::find($usertype['id']);
@@ -97,7 +97,7 @@ class AuthController extends Controller
             }
             // $tasks_controller = new PushNotificationCommonController;
             // $referalCode = $tasks_controller->generateReferalCode();
-            $user                       = new User;
+            $user = new User;
             $user->first_name           = @$request->input('first_name');
             $user->last_name            = @$request->input('last_name');
             $user->area                 = @$request->input('area');
@@ -108,40 +108,43 @@ class AuthController extends Controller
             $user->referral_code        = @$request->input('referral_code');
             $user->login_type           = @$request->input('login_type');
             $user->profile_image        = @$profileImage;
-            $user->
             $user->referral_by          = '';
+            $user->device_type          = @$request->input('device_type');
+            $user->device_id          = @$request->input('device_id');
             $user->email_verified_at    = @$email_verified_at;
-            $user->is_verified          = @$is_verified;
-            $user->status               = 1;
-            $plainPassword              = $request->input('password');
+            $user->is_verified = @$is_verified;
+            $user->status        = 1;
+            $user->device_type      = @$request->input('device_type');
+            $user->device_id        = @$request->input('device_id');
+            $plainPassword       = $request->input('password');
             if ($request->login_type == 'google') {
-                $user->google_id        = $request->input('google_id');
-                $plainPassword          = '12345678';
+                $user->google_id    = $request->input('google_id');
+                $plainPassword = '12345678';
             }
             if ($request->login_type == 'facebook') {
-                $user->facebook_id      = $request->input('facebook_id');
-                $plainPassword          = '12345678';
+                $user->facebook_id  = $request->input('facebook_id');
+                $plainPassword = '12345678';
             }
-            $user->password             = app('hash')->make($plainPassword);
+            $user->password      = app('hash')->make($plainPassword);
 
             $user->save();
-            $tasks_controller           = new PushNotificationCommonController;
-            $referalCode                = $tasks_controller->generateUsersReferralCode($user->id);
+            $tasks_controller = new PushNotificationCommonController;
+            $referalCode = $tasks_controller->generateUsersReferralCode($user->id);
             $getamount = DB::table('wallet_recharge')->insert([
-                'transactionid'     => "",
-                'transactiontype'   => '',
-                'user_id'           => $user->id,
-                'phone'             => '',
-                'method'            => '',
-                'amount'            => '0',
-                'change_amount'     => '0',
-                'description'       => '',
-                'created_at'        => date("Y-m-d H:i:s"),
-                'updated_at'        => date("Y-m-d H:i:s")
+                'transactionid' => "",
+                'transactiontype' => '',
+                'user_id' => $user->id,
+                'phone' => '',
+                'method' => '',
+                'amount' => '0',
+                'change_amount' => '0',
+                'description' => '',
+                'created_at' => date("Y-m-d H:i:s"),
+                'updated_at' => date("Y-m-d H:i:s")
             ]);
-            $tasks_controller       = new PushNotificationCommonController;
-            $message                = "You have register successfully with Duradrive at" . date("F j, Y, g:i A");
-            $ext                    = 'registration';
+            $tasks_controller = new PushNotificationCommonController;
+            $message = "You have register successfully with Duradrive at" . date("F j, Y, g:i A");
+            $ext = 'registration';
             $tasks_controller->postNotification($user->id, $message, $ext);
             if ($request->login_type != 'normal') {
                 $credentials = array('email' => $request->email, 'password' => '12345678');
@@ -155,8 +158,8 @@ class AuthController extends Controller
                     $usertype = User::where('email', $request->email)->first();
                     $finalData = array('token' => $this->respondWithToken($token));
                     $data = collect([
-                        "status"        => 200,
-                        "message"       => "Success",
+                        "status" => 200,
+                        "message" => "Success",
                         'user_id'       => $usertype['id'],
                         'first_name'    => $usertype['first_name'],
                         'last_name'     => $usertype['last_name'],
@@ -185,7 +188,6 @@ class AuthController extends Controller
         ]);
 
         if (!empty($request->get('phone'))) {
-
             $credentials = $request->only(['phone', 'password']);
         } else {
 
@@ -199,6 +201,11 @@ class AuthController extends Controller
                 $usertype = User::where('phone', $request->phone)->first();
                 if ($usertype['country_code'] != $request->country_code) {
                     return response()->json(['message' => 'Country code not matched', 'status' => 201], 401);
+                } else {
+                    $userdata = DB::table('users')->where('phone', $request->phone)->update([
+                        'device_type' => $request->input('device_type'),
+                        'device_id' => $request->input('device_id'),
+                    ]);
                 }
             } elseif (filter_var($request->get('email'), FILTER_VALIDATE_EMAIL)) {
                 $usertype = User::where('email', $request->email)->first();

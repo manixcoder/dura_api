@@ -315,7 +315,7 @@ class UserController extends Controller
                     if(count($userdata) > 0){
                        $getdata = DB::table('users')->where('phone', $request->phone)->where('id','!=',$request->user_id)->get(); 
                        if(count($getdata) > 0){
-                         return response()->json(["status" => 401,'message' => 'Phone already used!'], 404);
+                         return response()->json(["status" => 404,'message' => 'Phone already used!'], 404);
                        }else{
                          $user = DB::table('users')->where('id', $request->user_id)->update(array(
                                'phone' => $request->phone,
@@ -1052,7 +1052,7 @@ class UserController extends Controller
                 } 
                 catch (\Exception $e) 
                 {
-                    dd($e->getMessage());
+                    dd($e);
                     return response()->json(['message' => 'Data not found!'], 404);
                 }
             }

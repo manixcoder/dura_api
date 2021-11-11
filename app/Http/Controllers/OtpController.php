@@ -15,6 +15,7 @@ use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
 use League\Flysystem\Filesystem;
 use League\Flysystem\Adapter\Local;
+use App\Http\Controllers\PushNotificationCommonController; 
 use URL;
 
 class OtpController extends Controller
@@ -111,23 +112,33 @@ class OtpController extends Controller
                 $row = DB::table('promocode')->where('name',$request->input('promocode'))->first();
                 if($row!=null)
                 {
-                    $used_promocode = DB::table('used_promocode')->insert([
-                        'user_id'=>$request->input('user_id'),
-                        'promo_id'=>$row->id
-                        ]);
-                    $row = DB::table('promocode')->where('name',$request->input('promocode'))->first();
-                        
-                    $usedData = DB::table('used_promocode')
-                   ->where('user_id'  , $request->user_id)
-                   ->where('promo_id' , $row->id)
-                   ->first();
-                   if($usedData){
-                       $row->is_used=true;  
+                   $usedPromo = DB::table('used_promocode')->where('user_id',$request->input('user_id'))->where('promo_id',$row->id)->first();
+                   if($usedPromo !=null){
+                       $data = collect(["status" =>200,"message" => "Promo already used", "data"=>$row]);
+                       return response()->json($data, 200);
                    }else{
-                      $row->is_used=false;
+                       $used_promocode = DB::table('used_promocode')->insert([
+                           'user_id'=>$request->input('user_id'),
+                           'promo_id'=>$row->id
+                           ]);
+                       $row = DB::table('promocode')->where('name',$request->input('promocode'))->first();
+                       $usedData = DB::table('used_promocode')
+                                ->where('user_id'  , $request->user_id)
+                                ->where('promo_id' , $row->id)
+                                ->first();
+                                if($usedData){
+                                    $row->is_used=true;
+                                }else{
+                                    $row->is_used=false;
+                                }
+                                $tasks_controller = new PushNotificationCommonController;
+                                $message= " You have apply promocode successfully with Duradrive at ".date("F j, Y, g:i A");
+                                $ext='promocode';
+                                $tasks_controller->postNotification($request->user_id, $message,$ext);
+                                $data = collect(["status" =>200,"message" => "Promocode Varified" , "data"=>$row]);
+                                return response()->json($data, 200);  
                    }
-                    $data = collect(["status" =>200,"message" => "Promocode Varified" , "data"=>$row]);
-                    return response()->json($data, 200); 
+                     
                 }
                 $data = collect(["status" =>200,"message" => "Wrong Promocode", "data"=>$row]);
                 return response()->json($data, 200); 

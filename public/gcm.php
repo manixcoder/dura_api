@@ -8,20 +8,18 @@ class GCM
 
 	function __construct()
 		{
+		    return "Hello Manish";
 		}
 
 	public function send_notification($registatoin_ids, $message)
 		{
-
-	
-
-		$apiKey = "";
-		//$url = 'https://android.googleapis.com/gcm/send';
-		$url = 'https://fcm.googleapis.com/fcm/send';
-		$fields = array(
-			'registration_ids' => $registatoin_ids,
-			'data' => $message,
-		);
+		    $apiKey = "AAAAeB_dZhA:APA91bELAbNrF4c8U7ZQCN2AjOPxMUSCIsAk_OVjafBFXN4hERtN6sDu66KA2lyAEAlhWA_fjHagwgnqQUUEl40BB6vdYdpFqBhvBs-AkN9KjW-7h8GXxAv5MKbZaFYHSI6HUu3WxzUp";
+		    //$url = 'https://android.googleapis.com/gcm/send';
+		    $url = 'https://fcm.googleapis.com/fcm/send';
+		    $fields = array(
+		        'registration_ids' => $registatoin_ids,
+		        'data' => $message,
+		  );
 		//$headers = array("Content-Type:" . "application/json","Authorization:" . "key=" . $apiKey);
 		$headers = array(
 		// 'Authorization: key=' . "AIzaSyBxumKKnknvpf4FP9iupqT4rraP1MlpAkU",

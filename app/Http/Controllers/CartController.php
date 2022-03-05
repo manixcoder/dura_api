@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use App\Http\Controllers\PushNotificationCommonController;
 use App\Track;
+use Twilio\Rest\Client;
 use App\Alarm_create;
 use App\Templates;
 use App\User;
@@ -13,8 +14,7 @@ use URL;
 
 class CartController extends Controller
 {
-    public function add_to_user_cart(Request $request)
-    {
+    public function add_to_user_cart(Request $request){
         $rules = [
             'user_id' => 'required|int',
             'item_id'=>'required',
@@ -55,6 +55,7 @@ class CartController extends Controller
             'type'        =>'required',
             'reason'      =>'required'
         ];
+       
         $validator = Validator::make($request ->all(), $rules);
         if ($validator->fails()) {
             return response()->json(['status' => 422,'message'=>$validator->messages() ], 200);
@@ -63,28 +64,33 @@ class CartController extends Controller
         {
             try 
             { 
-                $finalData =  array('description'  => $request->description,
-                                    'user_id'      => $request->user_id,
-                                    'type'         => $request->type,
-                                    'reason'       => $request->reason,
-                                    'is_read'      => 0,
-                                    'created_at'   => date('Y-m-d H:i:s'));
-                
+                $finalData =  array(
+                    'description'  => $request->description,
+                    'user_id'      => $request->user_id,
+                    'type'         => $request->type,
+                    'reason'       => $request->reason,
+                    'is_read'      => 0,
+                    'created_at'   => date('Y-m-d H:i:s')
+                );
                 $item= DB::table('notification')->insertGetId($finalData);
                 return response()->json(['status' => 200,'message'=>'Success'], 200);
+                
             } catch (\Exception $e) {
               dd($e);
                // return response()->json(['message' => $e], 500);
             }
         }
     }
+    
     public function get_notification(Request $request)
     {
         $rules = [
             'user_id' => 'required|int',
             //'amount'=>'required'
         ];
+       
         $validator = Validator::make($request ->all(), $rules);
+
         if ($validator->fails()) {
             return response()->json(['status' => 422,'Status' => 'Failed','message'=>$validator->messages() ], 201);
         } 
@@ -98,12 +104,15 @@ class CartController extends Controller
             }
         }
     }
+    
     public function read_notification(Request $request)
     {
         $rules = [
             'user_id' => 'required|int',
         ];
+       
         $validator = Validator::make($request ->all(), $rules);
+
         if ($validator->fails()) {
             return response()->json(['status' => 422,'Status' => 'Failed','message'=>$validator->messages() ], 201);
         } 
@@ -117,19 +126,24 @@ class CartController extends Controller
                 }else{
                     $is_update = DB::table('notification')->where('user_id', $request->user_id)->where('id',$request->notification_id)->update(['is_read'=>1]);
                 }
+                
+                
                 return response()->json(['status' => 200,'message'=>'Success'], 200);
             }   else{
                 return response()->json(['status' => 201,'message'=>'Not found'], 201);
             }
         }
     }
+    
     public function addtowallet(Request $request)
     {
         $rules = [
             'user_id' => 'required|int',
             //'amount'=>'required'
         ];
+       
         $validator = Validator::make($request ->all(), $rules);
+
         if ($validator->fails()) {
             return response()->json(['status' => 422,'Status' => 'Failed','message'=>$validator->messages() ], 200);
         } 
@@ -143,26 +157,33 @@ class CartController extends Controller
                 {
                     $price = $getamount->amount+$request->amount;    
                 }
-                $finalData =  array('transactiontype' => $request->transactiontype,
-                                    'user_id'         => $request->user_id,
-                                    'amount'          => $price,
-                                    'phone'           => '0',
-                                    'method'          => 'credit',
-                                    'change_amount'   => $request->amount,
-                                    'transactionid'   => $request->transactionid,
-                                    'created_at'      => date('Y-m-d H:i:s'));
+                $finalData =  array(
+                    'transactiontype' => $request->transactiontype,
+                    'user_id'         => $request->user_id,
+                    'amount'          => $price,
+                    'phone'           => '0',
+                    'method'          => 'credit',
+                    'change_amount'   => $request->amount,
+                    'transactionid'   => $request->transactionid,
+                    'created_at'      => date('Y-m-d H:i:s')
+                    );
                                       
                 if($request->amount!="")
                 {
                     $item   = DB::table('wallet_recharge')->insertGetId($finalData);    
                 }
-                $getdata = DB::table('wallet_recharge')->where('user_id', $request->user_id)->orderBy('id','desc')->first();
-                if(isset($item))
-                {
+                
+                $getdata = DB::table('wallet_recharge')
+                ->where('user_id', $request->user_id)
+                ->orderBy('id','desc')
+                ->first();
+                //print_r($getdata);die;
+                if(isset($item)){
                     return response()->json(['status' => 200,'message'=>'Success','amount'=>$getdata], 200);
                 }else{
                     return response()->json(['status' => 200,'message'=>'Success','amount'=>$getdata], 200);
                 }
+              
             } catch (\Exception $e) {
                 dd($e);
                // return response()->json(['message' => $e], 500);
@@ -176,67 +197,69 @@ class CartController extends Controller
             'pickup_mobile'=>'required',
             'pickup_name'=>'required'
         ];
+        
         $validator = Validator::make($request ->all(), $rules);
         if ($validator->fails()) {
-            return response()->json([
-                'status' => 422,
-                'Status' => 'Failed',
-                'message'=>$validator->messages() 
-            ], 200);
-        }else{
+            return response()->json(['status' => 422,'Status' => 'Failed','message'=>$validator->messages() ], 200);
+        } 
+        else 
+        {
             try 
-            {
+            { 
                 $pickupshedule =array( 
-                        "pickup_address1"=> $request->pickup_address1,
-                        "pickup_address2"=>$request->pickup_address2,
-                        "pickup_mobile"=> $request->pickup_mobile,
-                        "pickup_name"=> $request->pickup_name,
-                        "destination_address1"=> $request->destination_address1,
-                        "destination_address2"=> $request->destination_address2,
-                        "destination_mobile"=> $request->destination_mobile,
-                        "destination_name"=> $request->destination_name,
-                        "type"=> $request->type,
-                        "acctype"=> $request->acctype,
-                        "pdate"=> $request->pdate,
-                        "created_at"=>$request->created_at,
-                        "user_id"=> $request->user_id,
-                        "pickuplat"=> $request->pickuplat,
-                        "pickuplon"=> $request->pickuplon,
-                        "destinationlat"=> $request->destinationlat,
-                        "destinationlon"=> $request->destinationlon,
-                        "status"=>'1'
+                        "pickup_address1"           => $request->pickup_address1,
+                        "pickup_address2"           => $request->pickup_address2,
+                        "pickup_mobile"             => $request->pickup_mobile,
+                        "pickup_name"               => $request->pickup_name,
+                        "destination_address1"      => $request->destination_address1,
+                        "destination_address2"      => $request->destination_address2,
+                        "destination_mobile"        => $request->destination_mobile,
+                        "destination_name"          => $request->destination_name,
+                        "type"                      => $request->type,
+                        "acctype"                   => $request->acctype,
+                        "pdate"                     => $request->pdate,
+                        "created_at"                => $request->created_at,
+                        "user_id"                   => $request->user_id,
+                        "pickuplat"                 => $request->pickuplat,
+                        "pickuplon"                 => $request->pickuplon,
+                        "destinationlat"            => $request->destinationlat,
+                        "destinationlon"            => $request->destinationlon,
+                        'verification_code'         => '',
+                        "status"                    =>'1'
                         );
-                $item= DB::table('durapickupshedule')->insertGetId($pickupshedule);
-                if($request->stopData !=null)
-                {
-                    $update= DB::table('durapickupshedule')->where('id',$item)->update(['is_stop'=>'1']); 
-                    $services = array();
-                    foreach($request->stopData as $data)
-                    {
-                        $services =array(
-                            'pickup_id'     => $item,
-                            'stop_address1' => $data['stop_address1'],
-                            'stop_address2' => $data['stop_address2'],
-                            'stop_name'     => $data['stop_name'],
-                            'stop_mobile'   => $data['stop_mobile'],
-                            'stoplat'       => $data['stoplat'],
-                            'stoplon'       => $data['stoplon']
-                            );
-                        $iteminsert = DB::table('pickup_stoplocation')->insertGetId($services);                
-                    }
+              $item= DB::table('durapickupshedule')->insertGetId($pickupshedule);
+              if($request->stopData !=null){
+                  $update= DB::table('durapickupshedule')->where('id',$item)->update(['is_stop'=>'1']);
+                  $services = array();
+                  // foreach(json_decode($request->stopData, true) as $data)
+                  foreach($request->stopData as $data){
+                      $services =array(
+                          'pickup_id'     => $item,
+                          'stop_address1' => $data['stop_address1'],
+                          'stop_address2' => $data['stop_address2'],
+                          'stop_name'     => $data['stop_name'],
+                          'stop_mobile'   => $data['stop_mobile'],
+                          'stoplat'       => $data['stoplat'],
+                          'stoplon'       => $data['stoplon']
+                          );
+                          $iteminsert = DB::table('pickup_stoplocation')->insertGetId($services);
+                  }
                 } 
                 $tasks_controller = new PushNotificationCommonController;
                 $message= " You have creted order successfully with Duradrive at ".date("F j, Y, g:i A");
                 $ext='placedorder';
                 $tasks_controller->postNotification($request->user_id, $message,$ext);
                 return response()->json(['status' => 200,'message'=>'Success','data'=>$item], 200);
+              
             } catch (\Exception $e) {
-               // dd($e);
+               dd($e);
                return response()->json(['status' => 422,'message' => $e->getMessage()], 500);
             }
         }
     }
-    public function get_vehicle(Request $request){
+    
+    public function get_vehicle(Request $request)
+    {
         $rules = [
             'pickuplat' => 'required',
             'pickuplon'=>'required',
@@ -247,57 +270,72 @@ class CartController extends Controller
         $validator = Validator::make($request ->all(), $rules);
         if ($validator->fails()) {
             return response()->json(['status' => 422,'Status' => 'Failed','message'=>$validator->messages() ], 200);
-        }else{
+        } 
+        else 
+        {
             try 
             {
                 $tasks_controller = new PushNotificationCommonController;
                 $distance = $tasks_controller->multipleStopDistance($request->pickup_id);
-                $data = DB::table('vehicle')->where('service', 1)->get();
-                if($data){
+              
+                $data = DB::table('vehicle')->get();
+                if($data)
+                {
                     $finalData= array();
-                    foreach($data as $item){
-                        $pricecard = DB::table('pricecard')->where('service', 1)->where('vehicle_type',$item->id)->get();
+                    foreach($data as $item)
+                    {
+                        $pricecard = DB::table('pricecard')
+                        ->where('vehicle_type',$item->id)
+                        ->get();
                         $services  = array();
-                        foreach($pricecard as $items){
+                        foreach($pricecard as $items)
+                        {
                             $services[] =array(
                                 'id'           => $items->id,
                                 'service'      => $items->services,
                                 'price'         =>$items->servicefee
-                            );
+                                );
                         }
-                        $totalprice = $distance*$item->kmfare+$item->basefare;
-                        $totalprice =round($totalprice, 0, PHP_ROUND_HALF_UP);
+                        $totalprice = $distance*$item->kmfare+$item->basefare;//
+                        $totalprice =round($totalprice, 1);
+                        //$totalprice =round($distance*$item->kmfare, 0, PHP_ROUND_HALF_UP);
                         $finalData[] =  array(
-                            'id'           => $item->id,
-                            'service'      => $item->service,
-                            'city'         => $item->city,
-                            'currency'      => '₱',
-                            'vehicle_type' => $item->vehicle_type,
-                            'weight_limit' => $item->weight_limit,
-                            'size_limit'   => $item->size_limit,
-                            'priceby'      => $item->priceby,
-                            'basefare'     => $item->basefare,
-                            'image'        => URL::to('/')."/public/Media/".$item->image,
-                            'kmfare'       => $item->kmfare,
-                            'priceafterbasefare' => $item->priceafterbasefare,
-                            'stopprice'    => $item->stopprice,
-                            'description'  => $item->description,
-                            'totalfare'    =>$totalprice,
-                            'created_at'   =>$item->created_at,
-                            'services'     =>$services
+                            'id'                    => $item->id,
+                            'service'               => $item->service,
+                            'city'                  => $item->city,
+                            'currency'              => '₱',
+                            'vehicle_type'          => $item->vehicle_type,
+                            'weight_limit'          => $item->weight_limit,
+                            'size_limit'            => $item->size_limit,
+                            'priceby'               => $item->priceby,
+                            'image'                 => URL::to('/')."/public/Media/".$item->image,
+                            'priceafterbasefare'    => $item->priceafterbasefare,
+                            'stopprice'             => $item->stopprice,
+                            'description'           => $item->description,
+                            'basefare'              => $item->basefare,
+                            'kmfare'                => $item->kmfare,
+                            'distance'              => $distance,
+                            'totalfare'             => $totalprice,
+                            'created_at'            => $item->created_at,
+                            'services'              => $services
                          );
                     }
+                    
                     return response()->json(['status' => 200,'message'=>'Success','data'=>$finalData], 200);
-                }else{
+                }
+                else{
                     return response()->json(['status' => 200,'message'=>'Success','data'=>""], 200);
                 }
+              
             } catch (\Exception $e) {
               dd($e);
                // return response()->json(['message' => $e], 500);
             }
         }
     }
-    public function pickup_details(Request $request){
+    
+    public function pickup_details(Request $request)
+    {
         $rules = [
             'pickup_id' => 'required|int',
             'vehicle_id' => 'required|int'
@@ -305,22 +343,28 @@ class CartController extends Controller
         $validator = Validator::make($request ->all(), $rules);
         if ($validator->fails()) {
             return response()->json(['status' => 422,'Status' => 'Failed','message'=>$validator->messages() ], 201);
-        }else{
-            try{
-                $pickupsheduleData = DB::table('durapickupshedule')->where('id', $request->pickup_id)->first();
+        } 
+        else 
+        {
+            try 
+            {
+                $pickupsheduleData = DB::table('durapickupshedule')
+                ->where('id', $request->pickup_id)
+                ->first();
+                $pickup_id = $pickupsheduleData->id;
                 $pickuplat = $pickupsheduleData->pickuplat;
                 $pickuplon = $pickupsheduleData->pickuplon;
-                $tasks_controller = new PushNotificationCommonController;
-                $nerarestDriver = $tasks_controller->getNearestDriver($pickuplat, $pickuplon, 'K');
-                $driverid = $nerarestDriver;
-                $driverid='196';
-                $getdriver      =  DB::table('driveuser')->where('id', $driverid)->first();
+                
+                $userData = DB::table('users')
+                ->where('id', $pickupsheduleData->user_id)
+                ->first();
+                
                 $status  ='1';//Pending
                 if($file = $request->file('itemphoto')) {
                     $destinationPath = base_path('public/Media/');
                     $profileImage = uniqid('itemphoto') . "-" . $file->getClientOriginalName();
                     $path = $file->move($destinationPath, $profileImage);
-                }else{
+                }   else{
                     $profileImage ="";
                 }
                 if($request->type=='later')
@@ -328,62 +372,83 @@ class CartController extends Controller
                     $driverid='0';
                     $status  ='1';//Pending    
                 }
+                else{
+                    $driverid='0';
+                    $status  ='1';//Pending  
+                }
                 if($request->services=='no'){
                     
                 }else{
+                   // echo $request->services;
+                   // die;
                     $servicesArray = json_decode($request->services, true);
                     $getpickup = DB::table('durapickup_services')->where('pickup_id',$request->pickup_id)->delete();
                     foreach($servicesArray as $service){
-                        $services = DB::table('durapickup_services')->insert([
+                        $services = DB::table('durapickup_services')
+                        ->insert([
                             'pickup_id'     => $request->pickup_id,
                             'service_id'    => $service['service_id'],
+                            'services_fee'  => $service['services_fee'],
                             'created_at'    =>date("Y-m-d H:i:s"),
                             'updated_at'    =>date("Y-m-d H:i:s"),
-                        ]);
-                    }
+                        ]);          
                 }
-                $is_update =DB::table('durapickupshedule')->where('id', $request->pickup_id)->update([
-                    'driver_id'   => $driverid,
-                    'status'      => $status,
-                    'vehicle_id'  => $request->vehicle_id,
-                    'price'       => $request->price,
-                    'drivernote'  => $request->drivernote,
-                    'tip'         => $request->tip,
-                    'itemtype'    => $request->itemtype,
-                    'coupon'      => $request->coupon,
-                    'discount'    => $request->discount,
-                    'itemphoto'   => $profileImage,
-                    'acctype'     => $request->acctype,
-                    'finalprice'  => $request->finalprice,
-                    'order_no'    => $this->rand_string(),
-                    'created_at'  =>date("Y-m-d H:i:s")
+                }
+                $is_update =DB::table('durapickupshedule')
+                ->where('id', $request->pickup_id)
+                ->update([
+                    'driver_id'         => $driverid,
+                    'status'            => $status,
+                    'vehicle_id'        => $request->vehicle_id,
+                    'price'             => $request->price,
+                    'drivernote'        => $request->drivernote,
+                    'tip'               => $request->tip,
+                    'itemtype'          => $request->itemtype,
+                    'coupon'            => $request->coupon,
+                    'discount'          => $request->discount,
+                    'itemphoto'         => $profileImage,
+                    'acctype'           => $request->acctype,
+                    'finalprice'        => $request->finalprice,
+                    'order_no'          => $this->rand_string(),
+                    'verification_code' => $this->verification_code(),
+                    'price_beak_up'     => $request->price_breakup,
+                    'created_at'        => date("Y-m-d H:i:s")
                     ]);
+                    
+                    $price_beak_up = json_decode($request->price_breakup, true);
+                    
+                    foreach($price_beak_up as $price_beak){
+                        $services = DB::table('ride_payment')
+                        ->insert([
+                            'pickup_id'         => $request->pickup_id,
+                            'km_fare'           => $price_beak['km_fare'],
+                            'price'             => $price_beak['price'],
+                            'distance_fare'     => $price_beak['km_fare'] * $price_beak['distance'],
+                            'tip'               => $price_beak['tip'],
+                            'distance'          => $price_beak['distance'],
+                            'finalprice'        => $price_beak['finalprice'],
+                            'base_fare'         => $price_beak['base_fare'],
+                            'created_at'        => date("Y-m-d H:i:s"),
+                            'updated_at'        => date("Y-m-d H:i:s"),
+                        ]); 
+                    }
                     $orderData = DB::table('durapickupshedule')->where('id', $request->pickup_id)->first();
                     $tasks_controller = new PushNotificationCommonController;
                     $message= " You have placed order successfully with Duradrive at ".date("F j, Y, g:i A");
                     $ext='placedorder';
                     $tasks_controller->postNotification($orderData->user_id, $message,$ext);
-                    $message = array("message" => $orderData);
-                    $getdriver      =  DB::table('driveuser')->where('id', 196)->first();
-                    $notification = $tasks_controller->send_notification($getdriver->device_id, $message);
-                // echo "<pre>";
-                //     print_r($getdriver);
-                //     die;
-                if($is_update)
-                {
-                    return response()->json(['status' => 200,'message'=>'Success','data'=>$is_update], 200);
-                }
-                else
-                {
-                    return response()->json(['status' => 201,'message'=>'failed','data'=>""], 200);
-                }
-            
-            }   catch (\Exception $e) {
+                    if($is_update){
+                        return response()->json(['status' => 200,'message'=>'Success','data'=>$is_update], 200);
+                    }else{
+                        return response()->json(['status' => 201,'message'=>'failed','data'=>""], 200);
+                    }
+            }catch (\Exception $e){
+                dd($e);
                 return response()->json(['message' => $e->getMessage()], 500);
-            }                                                                                          
-           
+            }
         }
     }
+    
     public function walletpackege(Request $request)
     {
         $data = DB::table('wallerpackage')->get();
@@ -400,7 +465,6 @@ class CartController extends Controller
         $data = DB::table('tipprice')->get();
         if($data)
         {
-            //print_r($data);die;
             return response()->json(['status' => 200,'message'=>'Success','data'=>$data], 200);
         }   else{
             return response()->json(['status' => 200,'message'=>'Success','data'=>""], 200);
@@ -409,15 +473,6 @@ class CartController extends Controller
     
     public function finddriver(Request $request)
     {
-        /*$pickuplat='28.476570';
-        $pickuplon='77.502190';
-        $droplat='28.570316';
-        $droplon='77.321823';
-            $origin = $pickuplat.",".$pickuplon; 
-            $destination = $droplat.",".$droplon;
-            $api = file_get_contents("https://maps.googleapis.com/maps/api/distancematrix/json?units=imperial&origins=".$origin."&destinations=".$destination."&key=".env('GOOGLE_KEY')."");
-            $data = json_decode($api);
-            print_r($data);die;*/
         $rules = [
             'pickup_id' => 'required|int',
             
@@ -430,59 +485,41 @@ class CartController extends Controller
         else 
         {
             try 
-            { 
-            $i=1;
-						while($i<=60){
-						//	usleep(1000000);
-                $data = DB::table('durapickupshedule')->where('id',$request->pickup_id)->first();
-                $ids= [];
-                if(!empty($data))
-                {
-                    //$driverdata = DB::table('driver_current_location')->where('driver_id',2)->get();
-					$driverdata = DB::table('driver_current_location')->get();
-
-                    //print_r($driverdata); 
-                    foreach($driverdata as $drivervalue)
-                    {
-                        /*$origin = $data->pickuplat.",".$data->pickuplon; 
-                        $destination = $drivervalue->latitude.",".$drivervalue->longitude;
-                        $api = file_get_contents("https://maps.googleapis.com/maps/api/distancematrix/json?units=imperial&origins=".$origin."&destinations=".$destination."&key=".env('GOOGLE_KEY')."");
-                        $data = json_decode($api);
-                        print_r($data);die;*/
-                       
-						    $origin = $data->pickuplat.",".$data->pickuplon; 
-                            $destination = $drivervalue->c_lat.",".$drivervalue->c_log;
-                            $api = file_get_contents("https://maps.googleapis.com/maps/api/distancematrix/json?units=imperial&origins=".$origin."&destinations=".$destination."&key=".env('GOOGLE_KEY')."");
-                            $data = json_decode($api);
-                            $times = @$data->rows[0]->elements[0]->duration->text;
-						//	$km = $this->distance($data->pickuplat, $data->pickuplon, $drivervalue->c_lat, $drivervalue->c_log, "K");
-							//print_r($km); die('------');
-							// $distance = number_format($km, 0, '', '');
-							 $tasks_controller = new PushNotificationCommonController;
-							 $distance = $tasks_controller->multipleStopDistance($request->pickup_id);
-							if($distance<=10000)
-							{
-								
-								$finalData =  array('driver_id'     => $drivervalue->id,
-													'vehicle_id'    => $data->vehicle_id,
-													'pickup_id'     => $request->pickup_id,
-													'km'            => $distance,
-													'time'          => @$times);
-								$item   = DB::table('search_driver')->insertGetId($finalData);    
-								array_push($ids,$item);
-								
-							}
-							//i++;
-						//}
-						
+            {
+                $i=1;
+                while($i<=60){
+                    $data = DB::table('durapickupshedule')->where('id',$request->pickup_id)->first();
+                    $ids= [];
+                    if(!empty($data)){
+                        $driverdata = DB::table('driver_current_location')->get();
+                        //print_r($driverdata); 
+                        foreach($driverdata as $drivervalue){
+                            $origin         = $data->pickuplat.",".$data->pickuplon; 
+                            $destination    = $drivervalue->c_lat.",".$drivervalue->c_log;
+                            $api            = file_get_contents("https://maps.googleapis.com/maps/api/distancematrix/json?units=imperial&origins=".$origin."&destinations=".$destination."&key=".env('GOOGLE_KEY')."");
+                            $data           = json_decode($api);
+                            $times          = @$data->rows[0]->elements[0]->duration->text;
+                            
+                            $tasks_controller = new PushNotificationCommonController;
+                            $distance = $tasks_controller->multipleStopDistance($request->pickup_id);
+                            if($distance<=10000){
+                                $finalData =  array(
+                                    'driver_id'     => $drivervalue->id,
+                                    'vehicle_id'    => $data->vehicle_id,
+                                    'pickup_id'     => $request->pickup_id,
+                                    'km'            => $distance,
+                                    'time'          => @$times
+                                    );
+                                    $item   = DB::table('search_driver')
+                                    ->insertGetId($finalData);
+                                    array_push($ids,$item);
+                            }
                     }
 					$data1 = DB::table('durapickupshedule')->where('id',$request->pickup_id)->first();
                     return response()->json(['status' => 200,'message'=>'Success','data'=> $data1], 200);
-                    
+                    }
+                    $i++;
                 }
-				
-				$i++;
-						}
             }catch (\Exception $e) {
               dd($e);
                // return response()->json(['message' => $e], 500);
@@ -494,193 +531,143 @@ class CartController extends Controller
         $rules = [
             'driver_id' => 'required|int'
         ];
-       
         $validator = Validator::make($request ->all(), $rules);
-
-
         if ($validator->fails()) {
             return response()->json(['status' => 422,'Status' => 'Failed','message'=>$validator->messages() ], 200);
-        } 
-        else 
-        {
-            try 
-            { 
-                //$IsPresent=DB::table('search_driver')->where('driver_id', $request->driver_id)->orderBy('id','desc')->first();
+        }else {
+            try{ 
                 $IsPresent=DB::table('search_driver')->orderBy('id','desc')->first();
                 //print_r($IsPresent);die;
-                if($IsPresent)
-                {
+                if($IsPresent){
                     $getpickup = DB::table('durapickupshedule')->where('id',$IsPresent->pickup_id)->first();
-                    //print_r($getpickup);die;
-                    //$is_update=DB::table('cart_items')->where('user_id', $request->user_id)->where('item_id',$IsPresent->item_id)->first();
-                    $finalData =  array('servicetype'       => 'Dura Express',
-                                        'pickup_id'         => $getpickup->id,
-                                        'pickup'            => $getpickup->pickup_address1.$getpickup->pickup_address2,
-                                        'dropoff'           => $getpickup->destination_address1.$getpickup->destination_address2,
-                                        'distance'          => $IsPresent->km,
-                                        'time'              => $IsPresent->time,
-                                        'username'          => $getpickup->pickup_name,
-                                        'pickuplat'         => $getpickup->pickuplat,
-                                        'pickuplon'         => $getpickup->pickuplon,
-                                        'destinationlat'    => $getpickup->destinationlat,
-                                        'destinationlon'    => $getpickup->destinationlon,
-                                        'pickup_mobile'     => $getpickup->pickup_mobile,
-                                        'destination_mobile'=> $getpickup->destination_mobile,
-                                        'price'             => $getpickup->price);
-                   return response()->json(['status' => 200,'message'=>'Success','data'=>$finalData], 200);
+                    $finalData =  array(
+                        'servicetype'       => 'Dura Express',
+                        'pickup_id'         => $getpickup->id,
+                        'pickup'            => $getpickup->pickup_address1.$getpickup->pickup_address2,
+                        'dropoff'           => $getpickup->destination_address1.$getpickup->destination_address2,
+                        'distance'          => $IsPresent->km,
+                        'time'              => $IsPresent->time,
+                        'username'          => $getpickup->pickup_name,
+                        'pickuplat'         => $getpickup->pickuplat,
+                        'pickuplon'         => $getpickup->pickuplon,
+                        'destinationlat'    => $getpickup->destinationlat,
+                        'destinationlon'    => $getpickup->destinationlon,
+                        'pickup_mobile'     => $getpickup->pickup_mobile,
+                        'destination_mobile'=> $getpickup->destination_mobile,
+                        'price'             => $getpickup->price
+                        );
+                        return response()->json(['status' => 200,'message'=>'Success','data'=>$finalData], 200);
                 }
                 else{
-                  
                     return response()->json(['status' => 200,'message'=>'No Data found','data'=>""], 200);
                 }
-              
+                
             }   catch (\Exception $e) {
                 dd($e);
                // return response()->json(['message' => $e], 500);
             }
         }
     }
-    
-    
-public function driver_current_location(Request $request)
-    {
+    public function driver_current_location(Request $request){
         $rules = [
             'driver_id' => 'required|int',
             'c_lat' => 'required',
             'c_log' => 'required'
         ];
-       
         $validator = Validator::make($request ->all(), $rules);
-
-
         if ($validator->fails()) {
             return response()->json(['status' => 422,'Status' => 'Failed','message'=>$validator->messages() ], 200);
-        } 
-        else 
-        {
-            try 
-            { 
+        }else{
+            try{
                 //$item= DB::table('cart_items')->insertGetId($request->all());
-                $is_update=DB::table('driver_current_location')->where('driver_id', $request->driver_id)->Update(['c_lat'=>$request->c_lat,'c_log'=>$request->c_log]);
+                $is_update=DB::table('driver_current_location')
+                ->where('driver_id', $request->driver_id)
+                ->Update([
+                    'c_lat'=>$request->c_lat,
+                    'c_log'=>$request->c_log
+                    ]);
                 return response()->json(['status' => 200,'message'=>'Request updated successfully','data'=>$is_update], 200);
-              
             }   catch (\Exception $e) {
                 dd($e);
                // return response()->json(['message' => $e], 500);
             }
         }
     }
-
     // close ----------------------
-    
-      
-    public function denied_request(Request $request)
-    {
+    public function denied_request(Request $request){
         $rules = [
             'driver_id' => 'required|int',
             'pickup_id' => 'required|int'
         ];
-       
         $validator = Validator::make($request ->all(), $rules);
-
-
         if ($validator->fails()) {
             return response()->json(['status' => 422,'Status' => 'Failed','message'=>$validator->messages() ], 200);
-        } 
-        else 
-        {
-            try 
-            { 
+        }else{
+            try{
                 $is_update=DB::table('search_driver')->where('driver_id', $request->driver_id)->delete();
-                
-                $finalData =  array('driver_id'     => $request->driver_id,
-                                            'pickup_id'     => $request->pickup_id,
-											'created_at'   => date('Y-m-d H:i:s'));
-											
-                        $item   = DB::table('driverdecline')->insertGetId($finalData);
-                        
-                return response()->json(['status' => 200,'message'=>'Request rejected successfully','data'=>$is_update], 200);
-              
+                $finalData =  array(
+                    'driver_id'     => $request->driver_id,
+                    'pickup_id'     => $request->pickup_id,
+                    'created_at'   => date('Y-m-d H:i:s')
+                    );
+                    $item   = DB::table('driverdecline')->insertGetId($finalData);
+                    return response()->json([
+                        'status' => 200,
+                        'message'=>'Request rejected successfully',
+                        'data'=>$is_update
+                        ], 200);
             } catch (\Exception $e) {
               dd($e);
                // return response()->json(['message' => $e], 500);
             }
         }
     }
-    
     public function accept_request(Request $request)
     {
         $rules = [
             'driver_id' => 'required|int',
             'pickup_id' => 'required|int'
         ];
-       
         $validator = Validator::make($request ->all(), $rules);
-
-
         if ($validator->fails()) {
             return response()->json(['status' => 422,'Status' => 'Failed','message'=>$validator->messages() ], 200);
-        } 
-        else 
-        {
-            try 
-            { 
+        }else{
+            try{
                 //$item= DB::table('cart_items')->insertGetId($request->all());
                 $is_update=DB::table('durapickupshedule')->where('id', $request->pickup_id)->Update(['driver_id'=>$request->driver_id,'status'=>$request->status]);
                 return response()->json(['status' => 200,'message'=>'Request rejected successfully','data'=>$is_update], 200);
-              
-            }   catch (\Exception $e) {
+            }catch (\Exception $e) {
                 dd($e);
                // return response()->json(['message' => $e], 500);
             }
         }
     }
-    
-    public function get_driver_details(Request $request)
-    {
+    public function get_driver_details(Request $request){
         $rules = [
             'user_id' => 'required|int',
             'pickup_id' => 'required|int'
         ];
-        
         $validator = Validator::make($request ->all(), $rules);
         if ($validator->fails()) {
             return response()->json(['status' => 422,'Status' => 'Failed','message'=>$validator->messages() ], 200);
-        } 
-        else 
-        {
-            // $data = DB::table('durapickupshedule')->where('id',$request->pickup_id)->first();
-            // $tasks_controller = new PushNotificationCommonController;
-            // $distance = $tasks_controller->multipleStopDistance($request->pickup_id);
-            
-            // $driverdata = DB::table('driveuser')->where('is_online',1)->get();
-            // if(!empty($data))
-            // {
-            //     foreach($driverdata as $drivervalue)
-            //     {
-            //         if($distance < 500000)
-            //         {
-            //             $finalData =  array(
-            //                 'driver_id'     => $drivervalue->id,
-            //                 'vehicle_id'    => $data->vehicle_id,
-            //                 'pickup_id'     => $request->pickup_id,
-            //                 'km'            => $distance,
-            //                 'time'          => '10'
-            //                 );
-            //          $item   = DB::table('search_driver')->insertGetId($finalData);
-            //         }
-            //     }
-            // }
-            
+        }else{
             $IsPresent = DB::table('durapickupshedule')->where('user_id',$request->user_id)->where('id',$request->pickup_id)->orderby('id','desc')->first();
-            
-            if(!empty($IsPresent))
-            {
+            if(!empty($IsPresent)){
+                if($request->step !='0'){
+                   // dd("Get Driver");
+                    $pickup_id = $IsPresent->id;
+                    $pickuplat = $IsPresent->pickuplat;
+                    $pickuplon = $IsPresent->pickuplon;
+                    $tasks_controller = new PushNotificationCommonController;
+                    $nerarestDriver = $tasks_controller->getNearestDriver($pickup_id,$pickuplat, $pickuplon, 'K');
+                }
+                
                 // $tasks_controller = new PushNotificationCommonController;
                 // $distance = $tasks_controller->multipleStopDistance($request->pickup_id);
                 
                 if($IsPresent->driver_id!=0 && !empty($IsPresent->driver_id))
                 {
+                    //dd('Hello Here');
                     //$searchdriver =  DB::table('search_driver')->orderBy('id','desc')->first();
                     $getdriver    =  DB::table('driveuser')->where('id',$IsPresent->driver_id)->first();
                     $destination = $IsPresent->pickuplat.",".$IsPresent->pickuplon; 
@@ -689,7 +676,9 @@ public function driver_current_location(Request $request)
                     //die;
                     $api = file_get_contents($map);
                     $dataapis = json_decode($api);
-                    $times = @$dataapis->rows[0]->elements[0]->duration->value;
+                    $distance = @$dataapis->rows[0]->elements[0]->distance->value;
+                    // dd($dataapis);
+                    $times = @$dataapis->rows[0]->elements[0]->duration->text;
                     //echo $times;die("Hello");
                     // if($times==null)
                     // {
@@ -698,13 +687,12 @@ public function driver_current_location(Request $request)
                     // }
                     // $tasks_controller = new PushNotificationCommonController;
                     // $distance = $tasks_controller->multipleStopDistance($request->pickup_id);
-                    $distance = mt_rand(0 * 2, 5 * 2) / 2;
-                    
+                    //$distance = mt_rand(0 * 2, 5 * 2) / 2;
                     
                     $finalData    =  array(
                         'drivername'        => $getdriver->firstname." ".$getdriver->lastname,
                         'driverphoto'       => URL::to('/')."/public/Media/".$getdriver->profilephoto_url,
-                        'distance'          => @$distance,
+                        'distance'          => @$distance." Miles",
                         'time'              => @$times,
                         'servicetype'       => 'Dura Express',
                         'price'             => $IsPresent->price,
@@ -722,53 +710,66 @@ public function driver_current_location(Request $request)
                             'body' => "Accept Order",
                         );
                      $result = $tasks_controller->send_notification($registatoin_ids, $message,$notification);
-                        return response()->json(['status' => 200,'message'=>'Success','data'=>$finalData], 200); 
+                     return response()->json(['status' => 200,'message'=>'Success','data'=>$finalData], 200); 
                 }else{
-                    //$searchdriver =  DB::table('search_driver')->orderBy('id','desc')->first();
-                    $getdriver      =  DB::table('driveuser')->where('id',5)->first();
-                    $destination    = $IsPresent->pickuplat.",".$IsPresent->pickuplon; 
-                    $origin         = $getdriver->latitude.",".$getdriver->longitude;
-                    $api            = file_get_contents("https://maps.googleapis.com/maps/api/distancematrix/json?units=matrix&origins=".$origin."&destinations=".$destination."&key=".env("GOOGLE_KEY")."");
-                    $dataapis       = json_decode($api);
-                    $times = @$dataapis->rows[0]->elements[0]->duration->value;
-                    // if($times==null)
-                    // {
-                    //     return response()->json(['status' => 201,'message'=>'No Driver found','data'=>null], 201);
-                    // }
-                    $tasks_controller = new PushNotificationCommonController;
-                    $distance = $tasks_controller->multipleStopDistance($request->pickup_id);
-                    
-                     $orderData = DB::table('durapickupshedule')->where('id', $request->pickup_id)->first();
-                     $getdriver      =  DB::table('driveuser')->where('id', $orderData->driver_id)->first();
-                     // echo "<pre>";
-                     // print_r($getdriver->device_id);
-                     // die;
-                     $registatoin_ids = $getdriver->device_id;
-                     $message = array("message" => $orderData);
-                     $notification =array(
-                         'title'=> "New bokking created",
-                         'sound'=> "default",
-                         'body' => "Accept Order",
-                     );
-                     $result = $tasks_controller->send_notification($registatoin_ids, $message,$notification);
-                     // $dd=json_decode($result);
-                     
-                     $finalData    =  array(
-                        'drivername'        => $getdriver->firstname." ".$getdriver->lastname,
-                        'driverphoto'       => URL::to('/')."/public/Media/".$getdriver->profilephoto_url,
-                        'distance'          => @$distance,
-                        'time'              => @$times,
-                        'servicetype'       => 'Dura Express',
-                        'price'             => $IsPresent->price,
-                        'vehicleno'         => 'UP16T1718');
-                    return response()->json(['status' => 200,'message'=>'Success','data'=>$finalData], 200);
-                    //return response()->json(['status' => 201,'message'=>'No Driver found','data'=>null], 201);
+                     //dd('Hello Here1');
+                    $finalData    =  array(
+                        'drivername'        => '',
+                        'driverphoto'       => '',
+                        'distance'          => '',
+                        'time'              => '',
+                        'servicetype'       => '',
+                        'price'             => '',
+                        'vehicleno'         => ''
+                        );
+                        return response()->json(['status' => 200,'message'=>'Success','data'=>$finalData], 200);
                 }
+                    
+                
+                // else{
+                //     //$searchdriver =  DB::table('search_driver')->orderBy('id','desc')->first();
+                //     $getdriver      =  DB::table('driveuser')->where('id',5)->first();
+                //     $destination    = $IsPresent->pickuplat.",".$IsPresent->pickuplon; 
+                //     $origin         = $getdriver->latitude.",".$getdriver->longitude;
+                //     $api            = file_get_contents("https://maps.googleapis.com/maps/api/distancematrix/json?units=matrix&origins=".$origin."&destinations=".$destination."&key=".env("GOOGLE_KEY")."");
+                //     $dataapis       = json_decode($api);
+                //     $times = @$dataapis->rows[0]->elements[0]->duration->value;
+                //     // if($times==null)
+                //     // {
+                //     //     return response()->json(['status' => 201,'message'=>'No Driver found','data'=>null], 201);
+                //     // }
+                //     $tasks_controller = new PushNotificationCommonController;
+                //     $distance = $tasks_controller->multipleStopDistance($request->pickup_id);
+                    
+                //      $orderData = DB::table('durapickupshedule')->where('id', $request->pickup_id)->first();
+                //      $getdriver      =  DB::table('driveuser')->where('id', $orderData->driver_id)->first();
+                //     //  $registatoin_ids = $getdriver->device_id;
+                //     //  $message = array("message" => $orderData);
+                //     //  $notification =array(
+                //     //      'title'=> "New bokking created",
+                //     //      'sound'=> "default",
+                //     //      'body' => "Accept Order",
+                //     //  );
+                //      // $result = $tasks_controller->send_notification($registatoin_ids, $message,$notification);
+                //      // $dd=json_decode($result);
+                     
+                //      $finalData    =  array(
+                //         'drivername'        => $getdriver->firstname." ".$getdriver->lastname,
+                //         'driverphoto'       => URL::to('/')."/public/Media/".$getdriver->profilephoto_url,
+                //         'distance'          => @$distance,
+                //         'time'              => @$times,
+                //         'servicetype'       => 'Dura Express',
+                //         'price'             => $IsPresent->price,
+                //         'vehicleno'         => 'UP16T1718');
+                //     return response()->json(['status' => 200,'message'=>'Success','data'=>$finalData], 200);
+                //     //return response()->json(['status' => 201,'message'=>'No Driver found','data'=>null], 201);
+                // }
             }else{
                 return response()->json(['status' => 201,'message'=>'No request found','data'=>null], 201);
             }
         }    
     }
+   
     public function get_pickup_details(Request $request)
     {
         $rules = [
@@ -779,19 +780,29 @@ public function driver_current_location(Request $request)
             return response()->json(['status' => 422, 'Status' => 'Failed', 'message' => $validator->messages()], 200);
         } else {
             try {
-                $IsPresent = DB::table('durapickupshedule')->where('user_id', $request->user_id)->where('vehicle_id', '!=', null)->orderby('id', 'desc')->first();
+                $IsPresent = DB::table('durapickupshedule')
+                ->where('user_id', $request->user_id)
+                ->where('vehicle_id', '!=', null)
+                ->orderby('id', 'desc')
+                ->first();
                 if ($IsPresent) {
                     $services = DB::table('durapickup_services as ds')
                         ->join('pricecard as pc', 'ds.service_id', '=', 'pc.id')
                         ->where('ds.pickup_id', $IsPresent->id)
                         ->select('pc.id', 'pc.services', 'pc.servicefee')
                         ->get();
-                        $getpickup  = DB::table('durapickupshedule')->where('id', $IsPresent->id)->first();
-                        if ($IsPresent->coupon != null) {
-                            $rowget = DB::table('promocode')->where('name', $IsPresent->coupon)->count();
-                            if ($rowget > 0) {
-                                $row = DB::table('promocode')->where('name', $IsPresent->coupon)->first();
-                                $coupon    =  array(
+                    $getpickup  = DB::table('durapickupshedule')
+                    ->where('id', $IsPresent->id)
+                    ->first();
+                    if ($IsPresent->coupon != null) {
+                        $rowget = DB::table('promocode')
+                        ->where('name', $IsPresent->coupon)
+                        ->count();
+                        if ($rowget > 0) {
+                            $row = DB::table('promocode')
+                            ->where('name', $IsPresent->coupon)
+                            ->first();
+                            $coupon    =  array(
                                 'id'            => @$row->id,
                                 'couponname'    => @$row->name,
                                 'discount'      => @$row->discount,
@@ -800,35 +811,25 @@ public function driver_current_location(Request $request)
                                 );
                             }
                     }
-                    $getusers     =  DB::table('users')->where('id', $request->user_id)->first();
+                    $getusers     =  DB::table('users')
+                    ->where('id', $request->user_id)
+                    ->first();
                     if ($getpickup->vehicle_id != "") {
                         $getvehicle     =  DB::table('vehicle')->where('id', $getpickup->vehicle_id)->where('service', 1)->first();
                         $getdriver      =  DB::table('driveuser')->where('id', $getpickup->driver_id)->first();/*$getpickup->driver_id*/
                         $searchdriver   =  DB::table('search_driver')->orderBy('id', 'desc')->first();
-
-                        $origin         = $getpickup->pickuplat . "," . $getpickup->pickuplon;
-                        $destination    = $getpickup->destinationlat . "," . $getpickup->destinationlon;
+                        $origin         = $getpickup->pickuplat.",".$getpickup->pickuplon;
+                        // dd($origin);
+                        $destination    = $getpickup->destinationlat.",".$getpickup->destinationlon;
                         $api            = file_get_contents("https://maps.googleapis.com/maps/api/distancematrix/json?units=matrix&origins=".$origin."&destinations=".$destination."&key=".env("GOOGLE_KEY")."");
                         $dataapis       = json_decode($api);
-                        //print_r($dataapis);die;
                         $times = @$dataapis->rows[0]->elements[0]->duration->value;
-                        /*if($times==null)
-                        {
-                            return response()->json(['status' => 201,'message'=>'No Driver found','data'=>null], 201);
-                        }*/
-
-                        // $km = $this->distance($getpickup->pickuplat, $getpickup->pickuplon, $getpickup->destinationlat, $getpickup->destinationlon, "K");
-                        // $distance = number_format($km, 0, '', '');
-                       
                         /*distance by google api start */ 
                         $tasks_controller = new PushNotificationCommonController;
                         $distance = $tasks_controller->multipleStopDistance($IsPresent->id);
-                        // echo $distance;
-                        // die;
                         /*distance by google api end */ 
-                        $totalprice =round($distance * $getvehicle->kmfare, 0, PHP_ROUND_HALF_UP);
+                        $totalprice =round((int)$distance * (int)$getvehicle->kmfare, 1);
                         //$totalprice = $distance * $getvehicle->kmfare + $getvehicle->basefare;
-
                         if ($IsPresent->type != 'later') {
                             $drivername = @$getdriver->firstname . " " . @$getdriver->lastname;
                             $driverphoto = URL::to('/') . "/public/Media/" . @$getdriver->profilephoto_url;
@@ -843,15 +844,16 @@ public function driver_current_location(Request $request)
                         } else {
                             $tip = '0';
                         }
-                        $totalPrices = round($getpickup->finalprice, 0, PHP_ROUND_HALF_UP);
+                        $totalPrices = round($getpickup->finalprice, 1);
                         $stopcount = DB::table('pickup_stoplocation')->where('pickup_id', $IsPresent->id)->count();
                         /* multiple stop data start*/ 
-
-                        $getpickup  = DB::table('durapickupshedule')->where('id', $IsPresent->id)->orderby('id', 'desc')->first();
+                        $getpickup  = DB::table('durapickupshedule')
+                        ->where('id', $IsPresent->id)
+                        ->orderby('id', 'desc')
+                        ->first();
                         $origin = $getpickup->pickuplat . "," . $getpickup->pickuplon;
                         $destination = $getpickup->destinationlat . "," . $getpickup->destinationlon;
                         $stopcount = DB::table('pickup_stoplocation')->where('pickup_id', $getpickup->id)->count();
-                        //echo $stopcount;die;
                         if ($stopcount > 0) {
                             $stopget = DB::table('pickup_stoplocation')->where('pickup_id', $getpickup->id)->get();
                             $stoplocation = array();
@@ -869,32 +871,12 @@ public function driver_current_location(Request $request)
                                 $stoplocations .= $location;
                             }
                             $driverlocationlink = 'https://www.google.com/maps/dir/' . $origin . $stoplocations . '/' . $destination;
-                            // $map = "https://maps.googleapis.com/maps/api/distancematrix/json?units=imperial&origins=" . $origin . "|" . $getstop->stoplat . ',' . $getstop->stoplon . "&destinations=" . $destination . "&key=".env('GOOGLE_KEY'). "";
-                            // $api = file_get_contents($map);
-                            // $data = json_decode($api);
+                            
                         } else {
                             $driverlocationlink = 'https://www.google.com/maps/dir/' . $origin . '/' . $destination;
-                            // $map = "https://maps.googleapis.com/maps/api/distancematrix/json?units=imperial&origins=" . $origin . "&destinations=" . $destination . "&key=" . env('GOOGLE_KEY') . "";
-                            // $api = file_get_contents($map);
-                            // $data = json_decode($api);
+                           
                         }
-                        /* multiple stop data end*/
-                        // echo $stopget;die;
-                        // if ($stopcount > 0) {
-                        //     $stopget = DB::table('pickup_stoplocation')->where('pickup_id', $IsPresent->id)->get();
-                        //     $stoplocation = array();
-                        //     foreach ($stopget as $getstop) {
-                        //         $stoplocation[]     = array(
-                        //             'stop_address1' => $getstop->stop_address1,
-                        //             'stop_address2' => $getstop->stop_address2,
-                        //             'stop_name'     => $getstop->stop_name,
-                        //             'stop_mobile'   => $getstop->stop_mobile,
-                        //             'stoplat'       => $getstop->stoplat,
-                        //             'stoplon'       => $getstop->stoplon
-                        //         );
-                        //     }
-                        // }
-                        $kmprice =round($distance * $getvehicle->kmfare, 0, PHP_ROUND_HALF_UP);
+                        $kmprice =round((int)$distance * (int)$getvehicle->kmfare, 1);
                         $completePrice =  array(
                             'distance'      => $distance,
                             'kmprice'       => $kmprice,
@@ -908,11 +890,10 @@ public function driver_current_location(Request $request)
                         );
                         $tasks_controller = new PushNotificationCommonController;
                         $completePrice = $tasks_controller->orderPriceBreakdown($getpickup->id);
-                        
-                        
                         $finalData  = array(
                             'servicetype'       => 'Dura Express',
                             'pickup_id'         => $getpickup->id,
+                            'verification_code' => $getpickup->verification_code,
                             'order_no'          => $getpickup->order_no,
                             'pickup'            => $getpickup->pickup_address1 . $getpickup->pickup_address2,
                             'stoplocation'      => $getpickup->stop_address1 . $getpickup->stop_address2,
@@ -937,15 +918,69 @@ public function driver_current_location(Request $request)
                             'username'          => @$getusers->first_name . " " . @$getusers->last_name,
                             'usermobile'        => @$getusers->phone,
                             'vehicleno'         => 'UP16Y1719',
+                            'verification_code'     => $getpickup->verification_code,
                             'status'            => @$getpickup->status,
                             'orderdate'         => date('F jS Y \a\t h:i:s A', strtotime($getpickup->pdate)),
                             'driverlocationlink' => $driverlocationlink,
                             //'driverlocationlink'=> 'https://162.241.87.160/duradrive_api/map.html',
                             'coupon'            => @$coupon,
-                            'stopdata'          => @$stoplocation
+                            'stopdata'          => @$stoplocation,
                         );
+                        if($getpickup->status !='4'){
+                            require base_path('public/twilio-php-main/src/Twilio/autoload.php');
+                            $sid = env('SID');
+                            $token = env('TWILIO_TOKEN');
+                            $twilio = new Client(env('SID'),  env('TWILIO_TOKEN'));
+                            $message = $twilio->messages->create(
+                                $getpickup->pickup_mobile, // to 
+                                array(
+                                    "messagingServiceSid" => env('TWILIO_FROM'),
+                                    "body" => "Dear user Please share otp ".$getpickup->verification_code. " for validate item to driver"
+                            )
+                        );  
+                        }else{
+                            DB::table('durapickupshedule')->where('id', $IsPresent->id)->update([
+                                'verification_code'=>'N/A'
+                                ]);
+                        }
+                        $orderData = DB::table('durapickupshedule')->where('id', $getpickup->id)->first();
+                        if($orderData->driver_id !='0'){
+                            $tasks_controller = new PushNotificationCommonController;
+                            $orderDatas = $tasks_controller->getPickupDetails($getpickup->id);
+                            $getdriver      =  DB::table('driveuser')->where('id', $orderData->driver_id)->first();
+                            $getUsers      =  DB::table('users')->where('id', $orderData->user_id)->first();
+                            $registatoin_ids = $getdriver->device_id;
+                            $message = array(
+                                "pushmessage" => array('data'=>$orderDatas),
+                                "notification_type"=>"order"
+                            );
+                            $notification =array(
+                                'title'=> "New booking created",
+                                'sound'=> "default",
+                                'body' => "Accept Order",
+                                );
+                            $result = $tasks_controller->send_notification($registatoin_ids, $message,$notification);
+                            $message = array(
+                            "pushmessage" => array('data'=>'Hi '.$getUsers->first_name.' your verification code for your pickup is '.$getpickup->verification_code.' . You have to share this code when drive reached at your pickup location
+                             Please do not share this code with any one .'),
+                             "notification_type"=>"order"
+                            );
+                            $notification =array(
+                                'title'=> "Pick Up Verification Code",
+                                'sound'=> "default",
+                                'body' => "Pick Up Verification Code",
+                                );
+                        }
                         
-                        
+                     
+                      
+                     
+                   
+                     
+                     
+                     
+                   // $result = $tasks_controller->user_send_notification($getUsers-device_id, $message,$notification);
+                     //die; 
                         return response()->json(['status' => 200, 'message' => 'Success', 'data' => $finalData], 200);
                     }
                 } else {
@@ -1003,6 +1038,7 @@ public function driver_current_location(Request $request)
             try 
             { 
                 $IsPresent = DB::table('durapickupshedule')->where('id',$request->order_id)->first();
+                
                 if($IsPresent)
                 {
                     $getpickup    =  DB::table('durapickupshedule')->where('id',$IsPresent->id)->first();
@@ -1019,7 +1055,8 @@ public function driver_current_location(Request $request)
                     }
                     $getusers     =  DB::table('users')->where('id',$request->user_id)->first();
                     $getvehicle   =  DB::table('vehicle')->where('id',$getpickup->vehicle_id)->where('service', 1)->first();
-                    $getdriver    =  DB::table('driveuser')->where('id',5)->first();/*$getpickup->driver_id*/ 
+                   // $getdriver    =  DB::table('driveuser')->where('country_code',+63)->first();/* $getpickup->driver_id */ 
+                     $getdriver    =  DB::table('driveuser')->where('id',$getpickup->driver_id)->first();/* $getpickup->driver_id */ 
                     $searchdriver =  DB::table('search_driver')->orderBy('id','desc')->first();
                     
                     $origin = $getpickup->pickuplat.",".$getpickup->pickuplon; 
@@ -1038,30 +1075,15 @@ public function driver_current_location(Request $request)
                     }else{
                         $tip='0';
                     }
-                    $totalPrice = round($getpickup->finalprice, 0, PHP_ROUND_HALF_UP);
+                    $totalPrice = round($getpickup->finalprice, 1);
                     $services = DB::table('durapickup_services as ds')
                                 ->join('pricecard as pc', 'ds.service_id', '=', 'pc.id')
                     			->where('ds.pickup_id', $IsPresent->id)
                     			->select('pc.id','pc.services','pc.servicefee')
                     			->get();
-                    //$data = DB::table('vehicle')->where('service', 1)->get();
-                    //print_r($getvehicle);die;
-                    //$totalprice = $distance*$getvehicle->kmfare+$getvehicle->basefare;
+                    
                     if(!empty($getvehicle))
                     {
-                        // $kmprice = round($distance*$getvehicle->kmfare, 0, PHP_ROUND_HALF_UP);
-                        // $completePrice =  array(
-                        //     'distance'      => $distance,
-                        //     'kmprice'       => $kmprice,
-                        //     'basefare'      => $getvehicle->basefare,
-                        //     'total'         => $totalPrice,
-                        //     'tip'           => $tip,
-                        //     'per_km'        => $getvehicle->kmfare,
-                        //     'services'      =>$services,
-                        //  // 'total'         => $getpickup->finalprice,
-                        //     'currency'      => '₱',
-                        //     'surcharge'     => 10
-                        //     );  
                         $tasks_controller = new PushNotificationCommonController;
                         $completePrice = $tasks_controller->orderPriceBreakdown($IsPresent->id);
                     }
@@ -1094,17 +1116,10 @@ public function driver_current_location(Request $request)
                                 $stoplocations .= $location;
                             } 
                             $driverlocationlink= 'https://www.google.com/maps/dir/'.$origin.$stoplocations.'/'.$destination;
-                            // $map="https://maps.googleapis.com/maps/api/distancematrix/json?units=imperial&origins=".$origin."|".$getstop->stoplat.','.$getstop->stoplon."&destinations=".$destination."&key=".env('GOOGLE_KEY')."";
-                            // $api = file_get_contents($map);
-                            // $data = json_decode($api);
                         }else{
                             $driverlocationlink= 'https://www.google.com/maps/dir/'.$origin.'/'.$destination;
-                            // $map="https://maps.googleapis.com/maps/api/distancematrix/json?units=imperial&origins=".$origin."&destinations=".$destination."&key=".env('GOOGLE_KEY')."";
-                            // $api = file_get_contents($map);
-                            // $data = json_decode($api);
                         }
-                        // echo $driverlocationlink;
-                        // die;
+                        
                         $finalData  = array(
                             'user_id'           => $request->user_id,
                             'order_id'          => $getpickup->id,
@@ -1133,8 +1148,8 @@ public function driver_current_location(Request $request)
                             'price'             => @$completePrice,
                             'drivername'        => $drivername,
                             'driverphoto'       => URL::to('/')."/public/Media/".$getdriver->profilephoto_url,
-                             'drivermobile'        => $mobile,
-                            "driverdescription"=> "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry standard dummy text ever since the 1500s",
+                             'drivermobile'     => $mobile,
+                            "driverdescription" => "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry standard dummy text ever since the 1500s",
                             'driver_id'         => @$getdriver->id,
                             'vehicle'           => $vehicle,
                             'username'          => @$getusers->first_name." ".@$getusers->last_name,
@@ -1315,6 +1330,25 @@ public function driver_current_location(Request $request)
         }
         return $randomString;
     }
+    public function verification_code() {
+        $length=4;
+        //$characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        $characters = '0123456789';
+        $charactersLength = strlen($characters);
+        $randomString = '';
+        for ($i = 0; $i < $length; $i++) {
+            $randomString .= $characters[rand(0, $charactersLength - 1)];
+        }
+        $dataProduct = DB::table('durapickupshedule')->where('verification_code', $randomString)->first();
+        
+        if($dataProduct)
+        {
+            return $this->verification_code();
+            
+        }else{
+            return $randomString;
+        }
+    }
     
     public function addaddress(Request $request)
     {
@@ -1476,16 +1510,45 @@ public function driver_current_location(Request $request)
         } 
         else 
         {
+            
             $pickupsheduleData = DB::table('durapickupshedule')->where('id', $request->pickup_id)->first();
-            $data       =array( 
+            $data  = array( 
                 'user_id'    => $request->user_id,
                 'driver_id'  => $request->driver_id,
                 'pickup_id'  => $request->pickup_id,
                 'canceledby' => $request->canceledby,
                 'reason'     => $request->reason
-                );
+            );
             $item= DB::table('shedulecancel')->insertGetId($data);
-            $is_update=DB::table('durapickupshedule')->where('id', $request->pickup_id)->update(['status'=>'4','price'=>'0','tip'=>'0','finalprice'=>'0']);
+            $is_update=DB::table('durapickupshedule')
+            ->where('id', $request->pickup_id)
+            ->update([
+                'status'=>'4',
+                'price'=>'0',
+                'tip'=>'0',
+                'finalprice'=>'0'
+                ]);
+            $tasks_controller = new PushNotificationCommonController;
+            $driverData      =  DB::table('driveuser')->where('id', $pickupsheduleData->driver_id)->first();
+            $registatoin_ids = $driverData->device_id;
+            $orderDatas = $tasks_controller->getPickupDetails($request->pickup_id);
+            $orderDatas['reason'] =$request->reason;
+            
+            $message = array(
+                "pushmessage" => array('data'=>$orderDatas),
+                "notification_type"=>"cancle"
+            );
+            $notification =array(
+                'title'=> "Order Cancel by user",
+                'sound'=> "default",
+                'body' => "Cancel Order",
+            );
+            
+            $result =  $tasks_controller->send_notification($registatoin_ids, $message,$notification);
+            // echo "<pre>";
+            // print_r($result);
+            // die;
+            
             /*Return start*/
             
             $walletData   = DB::table('wallet_recharge')->where('user_id', $request->user_id)->orderBy('id', 'DESC')->first();
@@ -1516,7 +1579,7 @@ public function driver_current_location(Request $request)
     {
         $secret = env('TWILIO_FROM');    // APP fixed key, inget itunes
 
-        $POSTFIELDS = array("To" => '+917905848385','MessagingServiceSid'=>$secret,'Body'=>'test messages');
+        $POSTFIELDS = array("To" => '+918054251404','MessagingServiceSid'=>$secret,'Body'=>'test messages');
         $POSTFIELDS = json_encode($POSTFIELDS);
 
         //Official purchase address Sandbox purchase address
@@ -1536,7 +1599,7 @@ public function driver_current_location(Request $request)
     }
     
     /*curl 'https://api.twilio.com/2010-04-01/Accounts/ACa5851aee43962b30a9f5f6d56bf09b09/Messages.json' -X POST \
---data-urlencode 'To=+917979948924' \
+--data-urlencode 'To=+918054251404' \
 --data-urlencode 'MessagingServiceSid=+13176997248' \
 --data-urlencode 'Body=test mesdgs' \
 -u ACa5851aee43962b30a9f5f6d56bf09b09:efbacf5eca58f1f8385a914ebda8838c*/
@@ -1584,6 +1647,9 @@ public function driver_current_location(Request $request)
             $destination = $droplat.",".$droplon;
             $api = file_get_contents("https://maps.googleapis.com/maps/api/distancematrix/json?units=imperial&origins=".$origin."&destinations=".$destination."&key=".env('GOOGLE_KEY')."");
             $data = json_decode($api);
-            print_r($data->rows[0]->elements[0]->duration->text);die;
+            print_r($data->rows[0]->elements[0]->duration->text);
+            die;
     }
 }
+
+?>

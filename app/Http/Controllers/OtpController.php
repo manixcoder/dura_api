@@ -174,7 +174,27 @@ class OtpController extends Controller
                 // send email
                 //mail($request->input('email'),"Otp code from wmc",$msg);
                 if (is_numeric($request->input('phone'))) {
-                    $id = DB::table('users_otp')->insertGetId(['otp' => $otp, 'phone' => $request->input('phone'), 'country_code' => $request->input('country_code')]);
+                    
+                    $usersOtpData = DB::table('users_otp')
+                                ->where('phone'  , $request->input('phone'))
+                                ->where('country_code' , $request->input('country_code'))
+                                ->first();
+                    if($usersOtpData){
+                        DB::table('users_otp')
+                        ->where('phone'  , $request->input('phone'))
+                        ->where('country_code' , $request->input('country_code'))
+                        ->update([
+                            'otp' => $otp,
+                            ]);  
+                    }else{
+                        $id = DB::table('users_otp')
+                                ->insertGetId([
+                                    'otp' => $otp,
+                                    'phone' => $request->input('phone'),
+                                    'country_code' => $request->input('country_code')
+                                ]);  
+                    }
+                    
                     require base_path('public/twilio-php-main/src/Twilio/autoload.php');
                     // dd(env('SID'));
                     // dd(env('TWILIO_TOKEN'));
@@ -183,15 +203,13 @@ class OtpController extends Controller
                     $sid = env('SID');
                     $token = env('TWILIO_TOKEN');
                     $twilio = new Client($sid, $token); 
-                    
-                    $message = $twilio->messages 
-                              ->create($request->input('country_code').$request->input('phone'), // to 
-                                       array(  
-                                           "messagingServiceSid" => env('TWILIO_FROM'),
-                                           //"from" =>"Duradrive",
-                                           "body" => 'Otp code from Duradrive is:' .$otp
-                                       ) 
-                              ); 
+                    $message = $twilio->messages->create($request->input('country_code').$request->input('phone'), // to
+                                array(
+                                    "messagingServiceSid" => env('TWILIO_FROM'),
+                                    //"from" =>"Duradrive",
+                                    "body" => 'Otp code from Duradrive is:' .$otp
+                                    )
+                                ); 
                     
                 }else{
                     $id = DB::table('users_otp')->insertGetId(['otp' => $otp, 'email' => $request->input('phone')]);

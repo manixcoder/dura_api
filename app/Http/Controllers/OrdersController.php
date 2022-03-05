@@ -265,40 +265,17 @@ class OrdersController extends Controller
         } else {
             try {
                 $IsPresent = DB::table('durapickupshedule')->where('user_id', $request->user_id)->where('driver_id', '!=', 0)->where('vehicle_id', '!=', null)->orderby('id', 'desc')->count();
+                
                 if ($request->status != "") {
                     $IsPresent = DB::table('durapickupshedule')->where('user_id', $request->user_id)->where('status', $request->status)->orderby('id', 'desc')->count();
                 }
                 if ($IsPresent > 0) {
                     $offset = ($request->page_id - 1) * $request->totalcount;
-                    $driver =0;
+                    $driver = 0;
                     $order_no='1';
                     $IsPresent = DB::select("select * from durapickupshedule WHERE user_id=".$request->user_id." AND driver_id !=" .$driver. "  AND order_no !=" .$order_no. " AND status=".$request->status. " ORDER BY id DESC limit ".$offset. ",". $request->totalcount);
                     if(count($IsPresent) > 0){
-                        // $IsPresent = DB::select("select * from durapickupshedule WHERE user_id=".$request->user_id." AND driver_id !=" .$driver. "  AND order_no !=" .$order_no. " AND status=".$request->status. " ORDER BY id DESC limit ".$offset. ",". $request->totalcount);
-                    //echo "<pre>";print_r($IsPresent);die;
-                    // if ($request->page_id == '1') {
-                    //     $IsPresent = DB::table('durapickupshedule')
-                    //         ->where('user_id', $request->user_id)
-                    //         ->where('driver_id', '!=', 0)
-                    //         ->where('order_no', '!=', 1)
-                    //         ->where('vehicle_id', '!=', null)
-                    //         ->where('status', $request->status)
-                    //         ->limit($request->totalcount)
-                    //         ->offset($offset)
-                    //         ->orderby('id', 'desc')
-                    //         ->get();
-                    // } else {
-                    //     $IsPresent = DB::table('durapickupshedule')
-                    //         ->where('user_id', $request->user_id)
-                    //         ->where('driver_id', '!=', 0)
-                    //         ->where('order_no', '!=', 1)
-                    //         ->where('vehicle_id', '!=', null)
-                    //         ->where('status', $request->status)
-                    //         ->limit($request->totalcount)
-                    //         ->offset($offset)
-                    //         ->orderby('id', 'desc')
-                    //         ->get();
-                    // }
+                    
                     foreach ($IsPresent as $ispresent) {
                         $getpickup    =  DB::table('durapickupshedule')
                         ->where('id', $ispresent->id)
@@ -322,14 +299,14 @@ class OrdersController extends Controller
                         ->first();
                         $getvehicle   =  DB::table('vehicle')
                         ->where('id', $getpickup->vehicle_id)
-                        ->where('service', 1)
+                        //->where('service', 1)
                         ->first();
                         $getdriver    =  DB::table('driveuser')
-                        ->where('id', 5)
+                        ->where('id', $ispresent->driver_id)
                         ->first();
-                        $searchdriver =  DB::table('search_driver')
-                        ->orderBy('id', 'desc')
-                        ->first();
+                        // $searchdriver =  DB::table('search_driver')
+                        // ->orderBy('id', 'desc')
+                        // ->first();
                         $origin = $getpickup->pickuplat . "," . $getpickup->pickuplon;
                         $destination = $getpickup->destinationlat . "," . $getpickup->destinationlon;
                         $api = file_get_contents("https://maps.googleapis.com/maps/api/distancematrix/json?units=imperial&origins=" . $origin . "&destinations=" . $destination . "&key=" . env('GOOGLE_KEY') . "");

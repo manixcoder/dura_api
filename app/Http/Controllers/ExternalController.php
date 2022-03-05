@@ -75,12 +75,16 @@ class ExternalController extends Controller
                 $country = DB::table('country')->where('phonecode','!=',0)->get();
                 //print_r($country);die;
                 $finalData= array();
-                foreach($country as $user)
-                {
-                    $finalData[] = array('id'=>$user->id,'iso'=>$user->iso,'country_name'=>$user->country_name,'country_code'=>$user->phonecode);
-                }
-                $data = collect(["status" => 200, "message" => "Data fetch successfully.!" , "data" => $finalData]);
-                return response()->json($data, 200);
+                foreach($country as $user){
+                    $finalData[] = array(
+                        'id'=>$user->id,
+                        'iso'=>$user->iso,
+                        'country_name'=>$user->country_name,
+                        'country_code'=>$user->phonecode
+                        );
+                    }
+                    $data = collect(["status" => 200, "message" => "Data fetch successfully.!" , "data" => $finalData]);
+                    return response()->json($data, 200);
             } 
             catch (\Exception $e) 
             {
@@ -91,50 +95,32 @@ class ExternalController extends Controller
         }
         public function refercode(Request $request)
         {
-            try 
-            {
+            try{
                 $user = DB::table('reference_codemaster')->where('recode', $request->refer_code)->first();
-                
-                if(!empty($user))
-                {
+                if(!empty($user)){
                     $data = collect(["status" => "200", "message" => "Code matched successfully.!" , "data" => $user]);
-                }   else{
-                    $data = collect(["status" => "200", "message" => "Code Not matched.!" , "data" =>null]);      
+                }else{
+                    $data = collect(["status" => "200", "message" => "Code Not matched.!" , "data" =>null]);
                 }
-                
                 return response()->json($data, 200);
-                
-            } 
-            catch (\Exception $e) 
-            {
+            }catch (\Exception $e){
                 print_r($e);
                 return response()->json(['message' => 'Data not found!'], 404);
             }    
         }
-        
-        public function allcountry()
-        {
-            try 
-            {
+        public function allcountry(){
+            try{
                 $user = DB::table('country')->orderby('id', 'DESC')->get();
-                
-                if(!empty($user))
-                {
+                if(!empty($user)){
                     $data = collect(["status" => "200", "message" => "data matched successfully.!" , "data" => $user]);
-                }   else{
+                }else{
                     $data = collect(["status" => "200", "message" => "data Not found.!" , "data" =>null]);
                 }
-                
                 return response()->json($data, 200);
-                
-            } 
-            catch (\Exception $e) 
-            {
+            }catch (\Exception $e){
                 print_r($e);
                 return response()->json(['message' => 'Data not found!'], 404);
             }
         }
         
 }
-
-?>

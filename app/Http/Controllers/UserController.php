@@ -116,6 +116,7 @@ class UserController extends Controller
                                 'country'       => $country_name,
                                 'facebook'      => $facebook,
                                 'google'        => $google,
+                                'is_verified'        => $user->is_verified,
                                 'status'        => $user->status
                             );
                     
@@ -136,21 +137,29 @@ class UserController extends Controller
      * @return Response
      */
     public function allUsers() {
+        $users = User::all();
+        $tasks_controller = new PushNotificationCommonController;
+        foreach($users as $user){
+            $referalCode = $tasks_controller->generateUsersReferralCode($user->id);
+        }
         die("sssssss");
          return response()->json(['users' =>  User::all()], 200);
     }
     public function useReferralCodeByUsers(Request $request){
+        // $this->allUsers();
+        // die;
         $rules = [
             'user_id' => 'required|integer',
             'referral_code'=>'required|string',
         ];
+        
         $validator = Validator::make($request->all(), $rules);
         if ($validator->fails()) {
-            return response()->json(['StatusCode' => 422,'Status' => 'Failed','message'=>$validator->messages() ], 200);      
+            return response()->json(['StatusCode' => 422,'Status' => 'Failed','message'=>$validator->messages() ], 200);
         } 
         else{
             try {
-                $tasks_controller = new PushNotificationCommonController;    
+                $tasks_controller = new PushNotificationCommonController;
                 $usersReferralData = DB::table('users_referralcode')
                 ->where('refereal_code', $request->referral_code)
                 ->where('is_used', '0')
@@ -190,7 +199,6 @@ class UserController extends Controller
             }
         }
     }
-
     /**
      * Get one user.
      *
@@ -302,32 +310,39 @@ class UserController extends Controller
             } 
             else{
                 try {
-                    
-                    $data = array(
-                        'phone' => $request->phone,
-                        'country_code' => $request->country_code
-                    );
-                    $getdata = DB::table('users')->where('phone', $request->phone)->where('id','!=',$request->user_id)->first();
-                    
-                    if(!empty($getdata))
-                    {
-                        $data = collect(["status" => "201", "message" => "Phone already exits.!"]);
-                        return response()->json($data, 201);
+                    $userdata = DB::table('users')->where('id', $request->user_id)->get();
+                   // echo count($userdata);die;
+                    if(count($userdata) > 0){
+                       $getdata = DB::table('users')->where('phone', $request->phone)->where('id','!=',$request->user_id)->get(); 
+                       if(count($getdata) > 0){
+                         return response()->json(["status" => 404,'message' => 'Phone already used!'], 404);
+                       }else{
+                         $user = DB::table('users')->where('id', $request->user_id)->update(array(
+                               'phone' => $request->phone,
+                               'email_verified_at' =>date("Y-m-d H:i:s"),
+                               'is_verified' =>'1',
+                               'country_code' => $request->country_code
+                        ));
+                        $tasks_controller = new PushNotificationCommonController;
+                        $message= " You have phone update successfully with Duradrive at ".date("F j, Y, g:i A");
+                        $ext='phoneupdate';
+                        $tasks_controller->postNotification($request->user_id, $message,$ext);
+                        $userdata = DB::table('users')->where('id', $request->user_id)->first();
+                        $data = collect(["status" => 200, "message" => "Phone update successfully.!",'data'=>$userdata]);
+                        return response()->json($data, 200);
+                       }
+                     
+                      
+                    }else{
+                      return response()->json(["status" => 404,'message' => 'user not found!'], 404);  
                     }
-                    //echo "hi";die;
-                    $user = DB::table('users')->where('id', $request->user_id)->update($data);
-                     $tasks_controller = new PushNotificationCommonController;
-                     $message= " You have phone update successfully with Duradrive at ".date("F j, Y, g:i A");
-                     $ext='phoneupdate';
-                     $tasks_controller->postNotification($request->user_id, $message,$ext);
                     
-                    $data = collect(["status" => "200", "message" => "Phone update successfully.!"]);
-                    return response()->json($data, 200);
+                    
                 } 
                 catch (\Exception $e) 
                 {
                     dd($e);
-                    return response()->json(['message' => 'user not found!'], 404);
+                    return response()->json(["status" => 404,'message' => 'user not found!'], 404);
                 }
             }
         }
@@ -610,12 +625,12 @@ class UserController extends Controller
             } 
             else 
             {
-                        
                 try 
                 {
-                    $finalData  =   array('google'      => $request->google,
-                                          'facebook'    => $request->facebook);
-                    
+                    $finalData  =   array(
+                        'google'      => $request->has('google') ? $request->google : "",
+                        'facebook'    => $request->has('facebook') ? $request->facebook : "",
+                    );
                     $is_update  = DB::table('users')->where('id', $request->user_id)->update($finalData);
                     if(!empty($is_update))
                     {

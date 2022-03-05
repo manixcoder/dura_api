@@ -1,9 +1,8 @@
 <?php
-
 namespace App\Http\Controllers;
-
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use App\Http\Controllers\PushNotificationCommonController;
 use App\Track;
 use App\Alarm_create;
 use App\Templates;
@@ -11,56 +10,53 @@ use App\User;
 use DB;
 use Hash;
 use URL;
-use App\Http\Controllers\PushNotificationCommonController;
-
 class OrdersController extends Controller
 {
-    public function __construct()
-    {
+    public function __construct(){
         //error_reporting(0);
     }
-    public function place_order_with_address(Request $request)
+    public function place_order_with_address (Request $request)
     {
         $today = date("Ymd");
-        $rand = strtoupper(substr(uniqid(sha1(time())), 0, 4));
+        $rand = strtoupper(substr(uniqid(sha1(time())),0,4));
         $uniqueOrderId = $today . $rand;
-
-        if ($request->orderData) {
-            foreach ($request->orderData as $orderdata) {
+        
+        if($request->orderData){
+            foreach($request->orderData as $orderdata) {
                 $rules = [
                     'order_item_id' => 'required|integer',
                     'user_id' => 'required|integer',
                 ];
-
+                
                 $validator = Validator::make($orderdata, $rules);
 
                 if ($validator->fails()) {
-                    return response()->json(['StatusCode' => 422, 'Status' => 'Failed', 'message' => $validator->messages()], 200);
-                } else {
-                    try {
+                    return response()->json(['StatusCode' => 422,'Status' => 'Failed','message'=>$validator->messages() ], 200);
+                }else {
+                    try{
                         $data = array(
-                            'order_id' => $uniqueOrderId,
-                            'order_item_id' => $orderdata['order_item_id'],
-                            'user_id' => $orderdata['user_id'],
-                            'payment_status' => $orderdata['payment_status'],
-                            'order_total' => $orderdata['order_total'],
-                            'order_subtotal' => $orderdata['order_subtotal'],
-                            'total_tax' => $orderdata['total_tax'],
-                            'item_tax' => $orderdata['item_tax'],
-                            'item_discount' => $orderdata['item_discount'],
-                            'total_discount' => $orderdata['total_discount'],
-                            'order_type' => $orderdata['order_type'],
-                            'payment_id' => $orderdata['payment_id'],
-                            'item_total' => $orderdata['item_total'],
+                            'order_id'=>$uniqueOrderId,
+                            'order_item_id'=>$orderdata['order_item_id'],
+                            'user_id'=>$orderdata['user_id'],
+                            'payment_status'=>$orderdata['payment_status'],
+                            'order_total'=>$orderdata['order_total'],
+                            'order_subtotal'=>$orderdata['order_subtotal'],
+                            'total_tax'=>$orderdata['total_tax'],
+                            'item_tax'=>$orderdata['item_tax'],
+                            'item_discount'=>$orderdata['item_discount'],
+                            'total_discount'=>$orderdata['total_discount'],
+                            'order_type'=>$orderdata['order_type'],
+                            'payment_id'=>$orderdata['payment_id'],
+                            'item_total'=>$orderdata['item_total'],
                         );
                         $addOrderData = DB::table('orders')->insertGetId($data);
                     } catch (\Exception $e) {
                         return response()->json(['message' => $e], 409);
-                    }
+                    }     
                 }
             }
-        }
-        if ($request->OrderBillingAddress) {
+        }   
+        if($request->OrderBillingAddress) {
             $data = $request->OrderBillingAddress;
             $rules = [
                 'user_id' => 'required|integer',
@@ -73,227 +69,189 @@ class OrdersController extends Controller
                 'state' => 'required|string',
                 'country' => 'required|string',
             ];
-
+                
             if ($validator->fails()) {
-                return response()->json(['StatusCode' => 422, 'Status' => 'Failed', 'message' => $validator->messages()], 200);
-            } else {
+                return response()->json(['StatusCode' => 422,'Status' => 'Failed','message'=>$validator->messages() ], 200);
+            } 
+            else  {
                 $addressdataforuser = array(
-                    'order_id' => $uniqueOrderId,
-                    'user_id' => $data['user_id'],
-                    'first_name' => $data['first_name'],
-                    'last_name' => $data['last_name'],
-                    'email' => $data['email'],
-                    'contact_number1' => $data['contact_number1'],
-                    'address_line1' => $data['address_line1'],
-                    'address_line2' => $data['address_line2'],
-                    'town' => $data['town'],
-                    'state' => $data['state'],
-                    'country' => $data['country']
+                    'order_id'=>$uniqueOrderId,
+                    'user_id'=>$data['user_id'],
+                    'first_name'=>$data['first_name'],
+                    'last_name'=>$data['last_name'],
+                    'email'=>$data['email'],
+                    'contact_number1'=>$data['contact_number1'],
+                    'address_line1'=>$data['address_line1'],
+                    'address_line2'=>$data['address_line2'],
+                    'town'=>$data['town'],
+                    'state'=>$data['state'],
+                    'country'=>$data['country']
                 );
-                try {
+                try  {
                     $addData = DB::table('user_addresses')->insertGetId($addressdataforuser);
                     $product_order = DB::table('orders')->where('order_id', $uniqueOrderId)->first();
                     $data = collect(["status" => "100", "message" => "Success", "orderId" => $product_order->id]);
                     return response()->json($data, 200);
-                } catch (\Exception $e) {
+                } 
+                catch (\Exception $e)  {
                     return response()->json(['message' => $e], 409);
                 }
-            }
+            } 
         }
     }
-
+    
     public function create_product_order(Request $request)
     {
         $rules = [
             'customer_id' => 'required|integer'
         ];
-        $validator = Validator::make($request->all(), $rules);
+        $validator = Validator::make($request ->all(), $rules);
 
         if ($validator->fails()) {
-            return response()->json(['StatusCode' => 422, 'Status' => 'Failed', 'message' => $validator->messages()], 200);
-        } else {
-            try {
-                $addData = DB::table('orders')->insertGetId($request->all());
+            return response()->json(['StatusCode' => 422,'Status' => 'Failed','message'=>$validator->messages() ], 200);
+        } 
+        else 
+        {
+           try 
+            {
+                $addData = DB::table('orders')->insertGetId($request->all()); 
                 $data = collect(["status" => "100", "message" => "Success", "data" => $addData]);
                 return response()->json($data, 200);
-            } catch (\Exception $e) {
+            } 
+            catch (\Exception $e) 
+            {
                 return response()->json(['message' => $e], 409);
             }
-        }
+        }                       
     }
-
+    
     public function get_product_order($id)
     {
-        if ($id != null) {
+        if($id!=null){
             $product_order = DB::table('orders')->where('id', $id)->first();
             $data = collect(["status" => "200", "message" => "Success", "data" => $product_order]);
-            return response()->json($data, 200);
-        } else {
+                    return response()->json($data, 200);
+        }
+        else{
             $data = collect(["status" => "404", "message" => "not found", "data" => null]);
-            return response()->json($data, 200);
+                    return response()->json($data, 200);
         }
     }
-
+    
     public function orderByuserid($id)
     {
-        if ($id != null) {
+        if($id!=null){
             //$product_order = DB::table('orders')->where('user_id', $id)->orderBy('id', 'DESC')->get();
             $product_order = DB::table('orders')
-                ->join('products', 'products.id', '=', 'orders.order_item_id')
-                ->select('orders.*', 'products.*', 'orders.id as id')
-                ->where('orders.user_id', $id)
-                ->orderBy('orders.id', 'DESC')->get();
-
+                            ->join('products', 'products.id', '=', 'orders.order_item_id')
+                            ->select('orders.*', 'products.*','orders.id as id')
+                            ->where('orders.user_id', $id)
+                            ->orderBy('orders.id', 'DESC')->get();
+                            
             $data = collect(["status" => "200", "message" => "Success", "data" => $product_order]);
             return response()->json($data, 200);
-        } else {
+        }
+        else{
             $data = collect(["status" => "404", "message" => "not found", "data" => null]);
             return response()->json($data, 200);
         }
     }
-
+    
     public function get_product_order_by_order_type(Request $request)
     {
-
+        
         $rules = [
             'order_type' => 'required|string'
         ];
-        $validator = Validator::make($request->all(), $rules);
+        $validator = Validator::make($request ->all(), $rules);
 
         if ($validator->fails()) {
-            return response()->json(['StatusCode' => 422, 'Status' => 'Failed', 'message' => $validator->messages()], 200);
-        }
-
-        if ($id != null) {
+            return response()->json(['StatusCode' => 422,'Status' => 'Failed','message'=>$validator->messages() ], 200);
+        } 
+        
+        if($id!=null){
             $product_order = DB::table('orders')->where('id', $id)->first();
             $data = collect(["status" => "200", "message" => "Success", "data" => $product_order]);
-            return response()->json($data, 200);
-        } else {
+                    return response()->json($data, 200);
+        }
+        else
+        {
             $data = collect(["status" => "404", "message" => "not found", "data" => null]);
-            return response()->json($data, 200);
+                    return response()->json($data, 200);
         }
     }
-
+    
     public function get_all_product_order(Request $request)
     {
-
-        $product_order = DB::table('orders')->Join('products', 'orders.order_item_id', 'products.id')->Join('customer', 'orders.user_id', 'customer.id')->Join('product_gallery', 'products.id', 'product_gallery.product_id')->join('color', 'color.id', '=', 'products.color_id')->get();
-        foreach ($product_order as $item) {
-            $item->image = 'https://' . $request->server->get('SERVER_NAME') . "/wmc_admin/public/product_image/" . $item->image;
-        }
+      
+        $product_order = DB::table('orders')->Join('products','orders.order_item_id','products.id')->Join('customer','orders.user_id','customer.id')->Join('product_gallery','products.id','product_gallery.product_id')->join('color', 'color.id', '=', 'products.color_id')->get();
+           foreach($product_order as $item)
+           {
+              $item->image='https://'.$request->server->get('SERVER_NAME')."/wmc_admin/public/product_image/".$item->image;
+           }
         $data = collect(["status" => "200", "message" => "Success", "data" => $product_order]);
-        return response()->json($data, 200);
+                return response()->json($data, 200);
     }
-
+    
     public function get_product_order_by_customer_id($id)
     {
-        if ($id != null) {
+        if($id!=null){
             $product_order = DB::table('product_order')->where('customer_id', $id)->first();
             $data = collect(["status" => "200", "message" => "Success", "data" => $product_order]);
-            return response()->json($data, 200);
-        } else {
+                    return response()->json($data, 200);
+        }
+        else{
             $data = collect(["status" => "404", "message" => "not found", "data" => null]);
-            return response()->json($data, 200);
+                    return response()->json($data, 200);
         }
     }
-
+    
     public function update_product_order(Request $request)
     {
-        if ($request->id != null) {
+        if($request->id!=null){
             $product_order = DB::table('product_order')->where('id', $request->id)->update($request->all());
             $data = collect(["status" => "200", "message" => "Success", "data" => $product_order]);
-            return response()->json($data, 200);
-        } else {
-            $data = collect(["status" => "404", "message" => "not found", "data" => null]);
-            return response()->json($data, 200);
+                    return response()->json($data, 200);
         }
+        else{
+            $data = collect(["status" => "404", "message" => "not found", "data" => null]);
+                    return response()->json($data, 200);
+        }
+       
     }
-
+    
     public function update_orderpayment_status(Request $request)
     {
-        if ($request->order_id != null) {
-            $product_order = DB::table('orders')->where('id', $request->order_id)->update(array("payment_status" => $request->payment_status));
+        if($request->order_id!=null){
+            $product_order = DB::table('orders')->where('id', $request->order_id)->update(array("payment_status"=>$request->payment_status));
             $data = collect(["status" => "200", "message" => "Success", "data" => $product_order]);
-            return response()->json($data, 200);
-        } else {
-            $data = collect(["status" => "404", "message" => "not found", "data" => null]);
-            return response()->json($data, 200);
+                    return response()->json($data, 200);
         }
+        else{
+             $data = collect(["status" => "404", "message" => "not found", "data" => null]);
+                    return response()->json($data, 200);
+        }
+       
     }
-
+    
     public function place_order(Request $request)
     {
+       
         $rules = [
             'user_id' => 'required|integer'
         ];
-        $validator = Validator::make($request->all(), $rules);
-        if ($validator->fails()) {
-            return response()->json(['StatusCode' => 422, 'Status' => 'Failed', 'message' => $validator->messages()], 200);
-        } else {
-            $data = collect(["status" => "200", "message" => "Order placed", "data" => 9283]);
-            return response()->json($data, 200);
-        }
-    }
-    public function orderDetailsUserId(Request $request)
-    {
-        $rules = [
-            'user_id' => 'required|int',
-            'page_id' => 'required|int',
-            'totalcount' => 'required|int',
-        ];
-        $validator = Validator::make($request->all(), $rules);
-        if ($validator->fails()) {
-            return response()->json([
-                'status' => 422,
-                'Status' => 'Failed',
-                'message' => $validator->messages()
-            ], 200);
-        } else {
-            try {
+        $validator = Validator::make($request ->all(), $rules);
 
-                $durapickupsheduleData = DB::table('durapickupshedule')
-                    ->where('id', 408)
-                    ->orderby('id', 'desc')
-                    ->first();
-                if ($durapickupsheduleData->is_stop == '1') {
-                    $stopData = DB::table('pickup_stoplocation')
-                        ->where('pickup_id', $durapickupsheduleData->id)
-                        ->get();
-                    $stoplocation = '';
-                    foreach ($stopData as $stop) {
-                        $location = "|" . $stop->stoplat . "," . $stop->stoplon;
-                        $stoplocation .= $location;
-                        //$stop = "|" . $stop->stoplat . "," . $stop->stoplon;                       
-                    }
-                    $map = "https://maps.googleapis.com/maps/api/distancematrix/json?units=imperial&origins=" . $durapickupsheduleData->pickuplat . "," . $durapickupsheduleData->pickuplon . $stoplocation . "&destinations=" . $durapickupsheduleData->destinationlat . "," . $durapickupsheduleData->destinationlon . "&key=" . env('GOOGLE_KEY') . "";
-                    
-                } else {
-                    $map = "https://maps.googleapis.com/maps/api/distancematrix/json?units=imperial&origins=" . $durapickupsheduleData->pickuplat . "," . $durapickupsheduleData->pickuplon . "&destinations=" . $durapickupsheduleData->destinationlat . "," . $durapickupsheduleData->destinationlon . "&key=" . env('GOOGLE_KEY') . "";
-                }
-                // echo $map;
-                // $map = "https://maps.googleapis.com/maps/api/distancematrix/json?units=imperial&origins=28.617276,77.180989|27.307315,77.982991|28.976272,78.649494|28.664557,77.426533&destinations=27.6901798,76.8147774&key=" . env('GOOGLE_KEY') . "";
-                $api = file_get_contents($map);
-                $data = json_decode($api);
-                $times = @$data->rows[0]->elements[0]->duration->text;
-                $distance = 0;
-                foreach (@$data->rows as $row) {
-                    $distancetext = $row->elements[0]->distance->text;
-                    $distanceText = explode(" ", $distancetext);
-                    $distance = $distance + $distanceText[0];
-                }
-                $distance = $distance  . " Mil " . " ";
-                $distance = $distance * 1.609344 . " Km";
-              
-                return response()->json(['status' => 201, 'message' => 'Data found', 'data' => $distance], 201);
-               
-                
-            } catch (\Exception $e) {
-                dd($e);
-                // return response()->json(['message' => $e], 500);
-            }
+        if ($validator->fails()) {
+            return response()->json(['StatusCode' => 422,'Status' => 'Failed','message'=>$validator->messages() ], 200);
         }
+        else{
+             $data = collect(["status" => "200", "message" => "Order placed", "data" => 9283]);
+                    return response()->json($data, 200);
+        }
+       
     }
-
+    
     public function order_details_ByUser_id(Request $request)
     {
         $rules = [
@@ -303,58 +261,54 @@ class OrdersController extends Controller
         ];
         $validator = Validator::make($request->all(), $rules);
         if ($validator->fails()) {
-            return response()->json([
-                'status' => 422,
-                'Status' => 'Failed',
-                'message' => $validator->messages()
-            ], 200);
+            return response()->json(['status' => 422, 'Status' => 'Failed', 'message' => $validator->messages()], 200);
         } else {
             try {
-                $IsPresent = DB::table('durapickupshedule')
-                    ->where('user_id', $request->user_id)
-                    ->where('driver_id', '!=', 0)
-                    ->where('vehicle_id', '!=', null)
-                    ->orderby('id', 'desc')
-                    ->count();
+                $IsPresent = DB::table('durapickupshedule')->where('user_id', $request->user_id)->where('driver_id', '!=', 0)->where('vehicle_id', '!=', null)->orderby('id', 'desc')->count();
                 if ($request->status != "") {
-                    $IsPresent = DB::table('durapickupshedule')
-                        ->where('user_id', $request->user_id)
-                        ->where('status', $request->status)
-                        ->orderby('id', 'desc')
-                        ->count();
+                    $IsPresent = DB::table('durapickupshedule')->where('user_id', $request->user_id)->where('status', $request->status)->orderby('id', 'desc')->count();
                 }
                 if ($IsPresent > 0) {
-                    $IsPresent = DB::table('durapickupshedule')
-                        ->where('user_id', $request->user_id)
-                        ->where('driver_id', '!=', 0)
-                        ->where('order_no', '!=', 1)
-                        ->where('vehicle_id', '!=', null)
-                        ->offset($request->page_id)
-                        ->limit($request->totalcount)
-                        ->orderby('id', 'desc')
-                        ->get();
-                    //print_r($IsPresent);die();
-                    if ($request->status != "") {
-                        $IsPresent = DB::table('durapickupshedule')
-                            ->where('user_id', $request->user_id)
-                            ->where('status', $request->status)
-                            ->where('order_no', '!=', 1)
-                            ->where('vehicle_id', '!=', null)
-                            ->orderby('id', 'desc')
-                            ->offset($request->page_id)
-                            ->limit($request->totalcount)
-                            ->get();
-                    }
+                    $offset = ($request->page_id - 1) * $request->totalcount;
+                    $driver =0;
+                    $order_no='1';
+                    $IsPresent = DB::select("select * from durapickupshedule WHERE user_id=".$request->user_id." AND driver_id !=" .$driver. "  AND order_no !=" .$order_no. " AND status=".$request->status. " ORDER BY id DESC limit ".$offset. ",". $request->totalcount);
+                    if(count($IsPresent) > 0){
+                        // $IsPresent = DB::select("select * from durapickupshedule WHERE user_id=".$request->user_id." AND driver_id !=" .$driver. "  AND order_no !=" .$order_no. " AND status=".$request->status. " ORDER BY id DESC limit ".$offset. ",". $request->totalcount);
+                    //echo "<pre>";print_r($IsPresent);die;
+                    // if ($request->page_id == '1') {
+                    //     $IsPresent = DB::table('durapickupshedule')
+                    //         ->where('user_id', $request->user_id)
+                    //         ->where('driver_id', '!=', 0)
+                    //         ->where('order_no', '!=', 1)
+                    //         ->where('vehicle_id', '!=', null)
+                    //         ->where('status', $request->status)
+                    //         ->limit($request->totalcount)
+                    //         ->offset($offset)
+                    //         ->orderby('id', 'desc')
+                    //         ->get();
+                    // } else {
+                    //     $IsPresent = DB::table('durapickupshedule')
+                    //         ->where('user_id', $request->user_id)
+                    //         ->where('driver_id', '!=', 0)
+                    //         ->where('order_no', '!=', 1)
+                    //         ->where('vehicle_id', '!=', null)
+                    //         ->where('status', $request->status)
+                    //         ->limit($request->totalcount)
+                    //         ->offset($offset)
+                    //         ->orderby('id', 'desc')
+                    //         ->get();
+                    // }
                     foreach ($IsPresent as $ispresent) {
                         $getpickup    =  DB::table('durapickupshedule')
-                            ->where('id', $ispresent->id)
-                            ->where('order_no', '!=', 1)
-                            ->where('vehicle_id', '!=', null)
-                            ->first();
+                        ->where('id', $ispresent->id)
+                        ->where('order_no', '!=', 1)
+                        ->where('vehicle_id', '!=', null)
+                        ->first();
                         if ($ispresent->coupon != null) {
                             $row = DB::table('promocode')
-                                ->where('name', $ispresent->coupon)
-                                ->first();
+                            ->where('name', $ispresent->coupon)
+                            ->first();
                             $coupon    =  array(
                                 'id' => $row->id,
                                 'couponname' => $row->name,
@@ -363,55 +317,59 @@ class OrdersController extends Controller
                                 'currency'   => '₱'
                             );
                         }
-                        $getusers     =  DB::table('users')->where('id', $request->user_id)->first();
-                        
-                        $getvehicle   =  DB::table('vehicle')->where('id', $getpickup->vehicle_id)->where('service', 1)->first();
-                        $getdriver    =  DB::table('driveuser')->where('id', 5)->first();
-                        $searchdriver =  DB::table('search_driver')->orderBy('id', 'desc')->first();
-
+                        $getusers     =  DB::table('users')
+                        ->where('id', $request->user_id)
+                        ->first();
+                        $getvehicle   =  DB::table('vehicle')
+                        ->where('id', $getpickup->vehicle_id)
+                        ->where('service', 1)
+                        ->first();
+                        $getdriver    =  DB::table('driveuser')
+                        ->where('id', 5)
+                        ->first();
+                        $searchdriver =  DB::table('search_driver')
+                        ->orderBy('id', 'desc')
+                        ->first();
                         $origin = $getpickup->pickuplat . "," . $getpickup->pickuplon;
                         $destination = $getpickup->destinationlat . "," . $getpickup->destinationlon;
                         $api = file_get_contents("https://maps.googleapis.com/maps/api/distancematrix/json?units=imperial&origins=" . $origin . "&destinations=" . $destination . "&key=" . env('GOOGLE_KEY') . "");
                         $data = json_decode($api);
-
                         $times = @$data->rows[0]->elements[0]->duration->text;
-
                         $km = $this->distance($getpickup->pickuplat, $getpickup->pickuplon, $getpickup->destinationlat, $getpickup->destinationlon, "K");
                         $distance = number_format($km, 0, '', '');
                         /*distance by google api*/
                         $tasks_controller = new PushNotificationCommonController;
                         $distance = $tasks_controller->multipleStopDistance($getpickup->id);
-                         
                         $kmfare = @$getvehicle->kmfare;
                         $basefare = $getvehicle->basefare;
                         $vehicle_type = $getvehicle->vehicle_type;
                         $totalprice = $distance * $kmfare + $basefare;
-
                         if ($getpickup->tip != '') {
                             $tip = $getpickup->tip;
                         } else {
                             $tip = '0';
                         }
                         $totalPrice = $getpickup->finalprice;
-
                         $services = DB::table('durapickup_services as ds')
                             ->join('pricecard as pc', 'ds.service_id', '=', 'pc.id')
                             ->where('ds.pickup_id', $ispresent->id)
                             ->select('pc.id', 'pc.services', 'pc.servicefee')
                             ->get();
 
-                        $completePrice =  array(
-                            'distance'      => $distance,
-                            'kmprice'       => $distance * $kmfare,
-                            'basefare'      => $basefare,
-                            //'total'         => $getpickup->finalprice,
-                            'total'         => $totalPrice,
-                            'tip'           => $tip,
-                            'per_km'        => $kmfare,
-                            'services'      => $services,
-                            'currency'      => '₱',
-                            'surcharge'     => 10
-                        );
+                        // $completePrice =  array(
+                        //     'distance'      => $distance,
+                        //     'kmprice'       => $distance * $kmfare,
+                        //     'basefare'      => $basefare,
+                        //     //'total'         => $getpickup->finalprice,
+                        //     'total'         => $totalPrice,
+                        //     'tip'           => $tip,
+                        //     'per_km'        => $kmfare,
+                        //     'services'      => $services,
+                        //     'currency'      => '₱',
+                        //     'surcharge'     => 10
+                        // );
+                        $tasks_controller = new PushNotificationCommonController;
+                        $completePrice = $tasks_controller->orderPriceBreakdown($ispresent->id);
 
                         if ($getpickup->paymentmode != 'cod' && $getpickup->paymentmode != null) {
                             $paid = 'pending';
@@ -419,14 +377,18 @@ class OrdersController extends Controller
                             $paid = 'paid';
                         }
 
-                        $stopcount = DB::table('pickup_stoplocation')->where('pickup_id', $ispresent->id)->count();
-                        //echo $stopget;die;
+                        $stopcount = DB::table('pickup_stoplocation')
+                        ->where('pickup_id', $ispresent->id)
+                        ->count();
+                        //echo $stopcount;die;
                         if ($stopcount > 0) {
-                            $stopget = DB::table('pickup_stoplocation')->where('pickup_id', $getpickup->id)->get();
+                            $stopget = DB::table('pickup_stoplocation')
+                            ->where('pickup_id', $ispresent->id)
+                            ->get();
                             $stoplocation = array();
                             $stoplocations = '';
                             foreach ($stopget as $getstop) {
-                                $stoplocation[]     = array(
+                                $stoplocation[] = array(
                                     'stop_address1' => $getstop->stop_address1,
                                     'stop_address2' => $getstop->stop_address2,
                                     'stop_name'     => $getstop->stop_name,
@@ -436,11 +398,16 @@ class OrdersController extends Controller
                                 );
                                 $location = "/" . $getstop->stoplat . "," . $getstop->stoplon;
                                 $stoplocations .= $location;
-
                             }
-                            $driverlocationlink = 'https://www.google.com/maps/dir/' . $origin . $stoplocations . '/' . $destination;
+                            $driverlocationlink = 'https://www.google.com/maps/dir/' . $origin . '/' . $getstop->stoplat . ',' . $getstop->stoplon . $stoplocations . '/' . $destination;
+                            $map = "https://maps.googleapis.com/maps/api/distancematrix/json?units=imperial&origins=" . $origin . "|" . $getstop->stoplat . ',' . $getstop->stoplon . "&destinations=" . $destination . "&key=" . env('GOOGLE_KEY') . "";
+                            $api = file_get_contents($map);
+                            $data = json_decode($api);
                         } else {
                             $driverlocationlink = 'https://www.google.com/maps/dir/' . $origin . '/' . $destination;
+                            $map = "https://maps.googleapis.com/maps/api/distancematrix/json?units=imperial&origins=" . $origin . "&destinations=" . $destination . "&key=" . env('GOOGLE_KEY') . "";
+                            $api = file_get_contents($map);
+                            $data = json_decode($api);
                         }
                         $finalData[]  = array(
                             'servicetype'       => 'Dura Express',
@@ -468,6 +435,8 @@ class OrdersController extends Controller
                             'price'             => $completePrice,
                             'drivername'        => $getdriver->firstname . " " . $getdriver->lastname,
                             'driverphoto'       => URL::to('/') . "/public/Media/" . $getdriver->profilephoto_url,
+                            'drivermobile'        => $getdriver->mobile,
+                            "driverdescription"=> "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry standard dummy text ever since the 1500s",
                             'driver_id'         => @$getdriver->id,
                             'vehicle'           => $vehicle_type,
                             'username'          => @$getusers->first_name . " " . @$getusers->last_name,
@@ -477,12 +446,15 @@ class OrdersController extends Controller
                             'orderdate'         => date('F jS Y \a\t h:i:s A', strtotime($getpickup->pdate)),
                             'coupon'            => @$coupon,
                             'stopdata'          => @$stoplocation,
-                            'driverlocationlink' => 'https://www.google.com/maps/dir/' . $origin . '/' . $destination,
+                            'driverlocationlink' => $driverlocationlink, 
                         );
                     }
                     return response()->json(['status' => 200, 'message' => 'Success', 'data' => $finalData], 200);
+                    }else{
+                    return response()->json(['status' => 201, 'message' => 'No Data found', 'data' => ""], 201);  
+                    }
+                    
                 } else {
-
                     return response()->json(['status' => 201, 'message' => 'No Data found', 'data' => ""], 201);
                 }
             } catch (\Exception $e) {
@@ -491,19 +463,20 @@ class OrdersController extends Controller
             }
         }
     }
-
+    
     public function distance($lat1, $lon1, $lat2, $lon2, $unit)
     {
         if (($lat1 == $lat2) && ($lon1 == $lon2)) {
             return 0;
-        } else {
+        }
+        else {
             $theta = $lon1 - $lon2;
             $dist = sin(deg2rad($lat1)) * sin(deg2rad($lat2)) +  cos(deg2rad($lat1)) * cos(deg2rad($lat2)) * cos(deg2rad($theta));
             $dist = acos($dist);
             $dist = rad2deg($dist);
             $miles = $dist * 60 * 1.1515;
             $unit = strtoupper($unit);
-
+            
             if ($unit == "K") {
                 return ($miles * 1.609344);
             } else if ($unit == "N") {
@@ -514,3 +487,5 @@ class OrdersController extends Controller
         }
     }
 }
+
+?>
